@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Carnet — films, séries, livres</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- La librairie officielle Supabase, chargée depuis un CDN.
+     Elle expose une variable globale "supabase" qu'on utilise plus bas. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root {
+    --bg:        #e9ebe4;
+    --surface:   #ffffff;
+    --ink:       #22271f;
+    --muted:     #6b7168;
+    --line:      #d5d8ce;
+    --accent:    #2f5d50;
+    --star:      #d9a441;
+    --film:      #b0413a;
+    --serie:     #4a6fa5;
+    --livre:     #4f7a4a;
+    --radius:    12px;
+    --shadow:    0 1px 2px rgba(34,39,31,.06), 0 8px 24px rgba(34,39,31,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif; line-height: 1.5;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  header h1 {
+    font-family: "Fraunces", serif; font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.02em; margin: 0;
+  }
+  header p { color: var(--muted); margin: 4px 0 0; font-size: 1.05rem; }
+
+  .stats {
+    display: flex; gap: 32px; margin: 28px 0 36px; padding: 18px 24px;
+    background: var(--surface); border-radius: var(--radius);
+    box-shadow: var(--shadow); flex-wrap: wrap;
+  }
+  .stat .num {
+    font-family: "Fraunces", serif; font-size: 1.9rem; font-weight: 600; line-height: 1;
+  }
+  .stat .lbl {
+    color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .05em;
+  }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 32px; align-items: start; }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 24px; position: sticky; top: 24px;
+  }
+  .panel h2 { font-family: "Fraunces", serif; font-weight: 600; margin: 0 0 20px; font-size: 1.3rem; }
+  label {
+    display: block; font-size: .82rem; font-weight: 500; color: var(--muted);
+    margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .04em;
+  }
+  input[type="text"], input[type="date"], textarea, select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 8px; font: inherit; color: var(--ink); background: #fbfbf9;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .stars-input { display: flex; gap: 4px; margin-top: 6px; }
+  .stars-input button {
+    background: none; border: none; cursor: pointer; font-size: 1.7rem;
+    line-height: 1; padding: 0; color: var(--line); transition: color .1s;
+  }
+  .stars-input button.on { color: var(--star); }
+
+  .btn {
+    width: 100%; margin-top: 22px; padding: 12px; background: var(--accent);
+    color: #fff; border: none; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .search-box { position: relative; }
+  .results {
+    position: absolute; z-index: 10; left: 0; right: 0; top: calc(100% + 4px);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: var(--shadow); max-height: 320px; overflow-y: auto;
+  }
+  .results:empty { display: none; }
+  .result {
+    display: flex; gap: 10px; padding: 8px 10px; cursor: pointer; align-items: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .result:last-child { border-bottom: none; }
+  .result:hover { background: #f2f4ee; }
+  .result img { width: 34px; height: 50px; object-fit: cover; border-radius: 3px; background: var(--line); flex: none; }
+  .result .r-title { font-weight: 600; font-size: .92rem; }
+  .result .r-sub { color: var(--muted); font-size: .8rem; }
+  .results .hint { padding: 12px; color: var(--muted); font-size: .85rem; }
+
+  .chosen {
+    display: none; gap: 10px; align-items: center; margin-top: 10px;
+    padding: 8px; background: #f2f4ee; border-radius: 8px;
+  }
+  .chosen img { width: 38px; height: 56px; object-fit: cover; border-radius: 4px; background: var(--line); flex: none; }
+  .chosen .c-title { font-weight: 600; font-size: .92rem; line-height: 1.2; }
+  .chosen .c-sub { color: var(--muted); font-size: .8rem; }
+  .chosen .c-clear {
+    margin-left: auto; background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 1rem;
+  }
+
+  .month-sep {
+    font-family: "Fraunces", serif; font-size: 1.1rem; color: var(--muted);
+    margin: 28px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--line);
+    text-transform: capitalize;
+  }
+  .month-sep:first-child { margin-top: 0; }
+
+  .entry {
+    display: flex; gap: 16px; background: var(--surface); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 14px; position: relative;
+  }
+  .entry .poster {
+    width: 62px; height: 92px; object-fit: cover; border-radius: 6px;
+    background: var(--line); flex: none;
+  }
+  .entry-body { flex: 1; min-width: 0; }
+  .entry-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .entry h3 { font-family: "Fraunces", serif; font-weight: 600; margin: 0; font-size: 1.25rem; }
+  .tag {
+    font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    color: #fff; padding: 3px 9px; border-radius: 20px;
+  }
+  .tag.film  { background: var(--film); }
+  .tag.serie { background: var(--serie); }
+  .tag.livre { background: var(--livre); }
+  .entry .stars { color: var(--star); letter-spacing: 2px; margin: 6px 0; }
+  .entry .date  { color: var(--muted); font-size: .85rem; }
+  .entry .avis  { margin: 8px 0 0; color: #33382f; }
+  .del {
+    position: absolute; top: 14px; right: 14px; background: none; border: none;
+    cursor: pointer; color: var(--line); font-size: 1.1rem; padding: 4px;
+  }
+  .del:hover { color: var(--film); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty .big { font-size: 2.5rem; margin-bottom: 8px; }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Mon Carnet</h1>
+    <p>Ce que j'ai vu, regardé et lu — noté et daté.</p>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="layout">
+
+    <div class="panel">
+      <h2>Nouvelle entrée</h2>
+
+      <label for="type">Type</label>
+      <select id="type">
+        <option value="film">Film</option>
+        <option value="serie">Série</option>
+        <option value="livre">Livre</option>
+      </select>
+
+      <label for="titre">Rechercher un titre</label>
+      <div class="search-box">
+        <input type="text" id="titre" placeholder="Commence à taper…" autocomplete="off">
+        <div class="results" id="results"></div>
+      </div>
+
+      <div class="chosen" id="chosen">
+        <img id="chosenImg" alt="">
+        <div>
+          <div class="c-title" id="chosenTitle"></div>
+          <div class="c-sub" id="chosenSub"></div>
+        </div>
+        <button class="c-clear" id="chosenClear" title="Changer">✕</button>
+      </div>
+
+      <label>Note</label>
+      <div class="stars-input" id="starsInput"></div>
+
+      <label for="avis">Avis (facultatif)</label>
+      <textarea id="avis" placeholder="Ce que tu en as pensé…"></textarea>
+
+      <label for="date">Terminé le</label>
+      <input type="date" id="date">
+
+      <button class="btn" id="ajouterBtn">Ajouter au carnet</button>
+    </div>
+
+    <div id="journal"></div>
+
+  </div>
+</div>
+
+<script>
+/* =============================================================
+   CONFIGURATION — les deux valeurs de connexion à ta base.
+   L'URL est déjà remplie. Colle ta clé "publishable" entre les
+   guillemets de SUPABASE_KEY (elle commence par sb_publishable_).
+   Ces deux valeurs sont faites pour vivre dans le code du navigateur.
+   ============================================================= */
+const SUPABASE_URL = "https://pyswfjgptkdljstjtrtk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_v9VKqpjF771p5FnXFM-vtg_8u7uXGtJ";
+
+// Ta clé TMDB (films & séries). Les livres n'en ont pas besoin.
+const CLE_TMDB = "1e80173159e2ba2f1ec3e1436111397c";
+/* ============================================================= */
+
+// On crée le "client" Supabase : l'objet par lequel on parle à la base.
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let entrees = [];       // rempli depuis Supabase au démarrage
+let noteChoisie = 0;
+let selection = null;   // l'œuvre choisie dans les résultats de recherche
+
+function etoiles(note) { return "★".repeat(note) + "☆".repeat(5 - note); }
+
+/* ---------- Les étoiles cliquables du formulaire ---------- */
+function construireEtoilesFormulaire() {
+  const zone = document.getElementById("starsInput");
+  zone.innerHTML = "";
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement("button");
+    b.textContent = "★";
+    b.addEventListener("click", () => {
+      noteChoisie = i;
+      [...zone.children].forEach((s, idx) => s.classList.toggle("on", idx < i));
+    });
+    zone.appendChild(b);
+  }
+}
+
+/* =============================================================
+   BASE DE DONNÉES (Supabase)
+   Chaque opération est un appel réseau : d'où async/await.
+   ============================================================= */
+
+// Charge toutes les entrées depuis la table "entrees".
+async function charger() {
+  const journal = document.getElementById("journal");
+
+  // Garde-fou : tant que la clé n'est pas collée, on explique quoi faire.
+  if (SUPABASE_KEY.startsWith("COLLE")) {
+    journal.innerHTML = '<div class="empty"><div class="big">🔑</div>'
+      + '<p>Colle ta clé publishable Supabase dans le code<br>'
+      + '(ligne <code>SUPABASE_KEY</code>) pour connecter la base.</p></div>';
+    return;
+  }
+
+  const { data, error } = await db
+    .from("entrees")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    journal.innerHTML = '<div class="empty"><p>Impossible de charger : '
+      + echapper(error.message) + '</p></div>';
+    return;
+  }
+  entrees = data || [];
+  afficher();
+}
+
+// Ajoute une entrée dans la base, puis recharge la liste.
+async function ajouter() {
+  const type = document.getElementById("type").value;
+  const avis = document.getElementById("avis").value.trim();
+  const date = document.getElementById("date").value;
+
+  if (!selection) { alert("Choisis une œuvre dans les résultats de recherche."); return; }
+  if (noteChoisie === 0) { alert("Choisis une note."); return; }
+
+  const bouton = document.getElementById("ajouterBtn");
+  bouton.disabled = true;                       // évite le double-clic pendant l'envoi
+
+  const { error } = await db.from("entrees").insert({
+    titre:    selection.titre,
+    type:     type,
+    note:     noteChoisie,
+    avis:     avis,
+    date_fin: date || null,
+    poster:   selection.poster || "",
+    annee:    selection.annee || ""
+  });
+
+  bouton.disabled = false;
+  if (error) { alert("Erreur à l'enregistrement : " + error.message); return; }
+
+  reinitialiserFormulaire();
+  await charger();
+}
+
+// Supprime une entrée d'après son id, puis recharge.
+async function supprimer(id) {
+  const { error } = await db.from("entrees").delete().eq("id", id);
+  if (error) { alert("Erreur à la suppression : " + error.message); return; }
+  await charger();
+}
+
+function reinitialiserFormulaire() {
+  document.getElementById("avis").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("type").value = "film";
+  noteChoisie = 0;
+  effacerSelection();
+  construireEtoilesFormulaire();
+}
+
+/* =============================================================
+   RECHERCHE DE TITRES (TMDB + Open Library)
+   ============================================================= */
+
+async function chercherTMDB(query, kind) {
+  const url = "https://api.themoviedb.org/3/search/" + kind
+            + "?api_key=" + CLE_TMDB
+            + "&language=fr-FR&query=" + encodeURIComponent(query);
+  const rep = await fetch(url);
+  if (!rep.ok) throw new Error("TMDB a répondu " + rep.status);
+  const data = await rep.json();
+  return (data.results || []).slice(0, 6).map(r => ({
+    titre:  r.title || r.name,
+    annee:  (r.release_date || r.first_air_date || "").slice(0, 4),
+    poster: r.poster_path ? "https://image.tmdb.org/t/p/w154" + r.poster_path : "",
+    sous:   ""
+  }));
+}
+
+async function chercherOpenLibrary(query) {
+  const url = "https://openlibrary.org/search.json?limit=6"
+            + "&fields=title,author_name,first_publish_year,cover_i&title="
+            + encodeURIComponent(query);
+  const rep = await fetch(url);
+  if (!rep.ok) throw new Error("Open Library a répondu " + rep.status);
+  const data = await rep.json();
+  return (data.docs || []).slice(0, 6).map(d => ({
+    titre:  d.title,
+    annee:  d.first_publish_year ? String(d.first_publish_year) : "",
+    poster: d.cover_i ? "https://covers.openlibrary.org/b/id/" + d.cover_i + "-M.jpg" : "",
+    sous:   d.author_name ? d.author_name[0] : ""
+  }));
+}
+
+async function rechercher() {
+  const query = document.getElementById("titre").value.trim();
+  const type  = document.getElementById("type").value;
+  const zone  = document.getElementById("results");
+
+  if (query.length < 2) { zone.innerHTML = ""; return; }
+
+  if ((type === "film" || type === "serie") && CLE_TMDB === "") {
+    zone.innerHTML = '<div class="hint">Ajoute ta clé TMDB dans le code pour '
+                   + 'chercher films et séries. Les livres marchent déjà.</div>';
+    return;
+  }
+
+  zone.innerHTML = '<div class="hint">Recherche…</div>';
+  try {
+    let liste;
+    if (type === "film")  liste = await chercherTMDB(query, "movie");
+    else if (type === "serie") liste = await chercherTMDB(query, "tv");
+    else liste = await chercherOpenLibrary(query);
+    afficherResultats(liste);
+  } catch (err) {
+    zone.innerHTML = '<div class="hint">Souci : ' + echapper(err.message) + '</div>';
+  }
+}
+
+function afficherResultats(liste) {
+  const zone = document.getElementById("results");
+  if (liste.length === 0) { zone.innerHTML = '<div class="hint">Aucun résultat.</div>'; return; }
+  zone.innerHTML = "";
+  for (const item of liste) {
+    const div = document.createElement("div");
+    div.className = "result";
+    const sousTexte = [item.annee, item.sous].filter(Boolean).join(" · ");
+    div.innerHTML =
+      (item.poster ? '<img src="' + item.poster + '" alt="">' : '<img alt="">')
+      + '<div><div class="r-title">' + echapper(item.titre) + '</div>'
+      + '<div class="r-sub">' + echapper(sousTexte) + '</div></div>';
+    div.addEventListener("click", () => choisir(item));
+    zone.appendChild(div);
+  }
+}
+
+function choisir(item) {
+  selection = item;
+  document.getElementById("titre").value = item.titre;
+  document.getElementById("results").innerHTML = "";
+  const chip = document.getElementById("chosen");
+  chip.style.display = "flex";
+  document.getElementById("chosenImg").src = item.poster || "";
+  document.getElementById("chosenTitle").textContent = item.titre;
+  document.getElementById("chosenSub").textContent =
+    [item.annee, item.sous].filter(Boolean).join(" · ");
+}
+
+function effacerSelection() {
+  selection = null;
+  document.getElementById("chosen").style.display = "none";
+  document.getElementById("titre").value = "";
+  document.getElementById("results").innerHTML = "";
+}
+
+/* =============================================================
+   AFFICHAGE
+   ============================================================= */
+
+function moisLisible(dateStr) {
+  if (!dateStr) return "Sans date";
+  return new Date(dateStr).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+}
+
+function afficher() { afficherStats(); afficherJournal(); }
+
+function afficherStats() {
+  const zone = document.getElementById("stats");
+  const total = entrees.length;
+  const moyenne = total === 0 ? 0
+    : (entrees.reduce((s, e) => s + e.note, 0) / total).toFixed(1);
+  zone.innerHTML =
+    '<div class="stat"><div class="num">' + total + '</div><div class="lbl">entrées</div></div>'
+  + '<div class="stat"><div class="num">' + moyenne + '</div><div class="lbl">note moyenne</div></div>';
+}
+
+function afficherJournal() {
+  const zone = document.getElementById("journal");
+  if (entrees.length === 0) {
+    zone.innerHTML = '<div class="empty"><div class="big">✷</div>'
+      + '<p>Ton carnet est vide.<br>Cherche ta première œuvre à gauche.</p></div>';
+    return;
+  }
+
+  // Tri du plus récent au plus ancien selon la date de fin.
+  const triees = [...entrees].sort((a, b) => {
+    if (!a.date_fin) return 1;
+    if (!b.date_fin) return -1;
+    return b.date_fin.localeCompare(a.date_fin);
+  });
+
+  let html = "";
+  let moisCourant = "";
+  for (const e of triees) {
+    const mois = moisLisible(e.date_fin);
+    if (mois !== moisCourant) { html += '<div class="month-sep">' + mois + '</div>'; moisCourant = mois; }
+    const dateAffichee = e.date_fin ? new Date(e.date_fin).toLocaleDateString("fr-FR") : "—";
+    html +=
+      '<div class="entry">'
+    + (e.poster ? '<img class="poster" src="' + e.poster + '" alt="">' : '')
+    + '<div class="entry-body">'
+    + '<button class="del" onclick="supprimer(' + e.id + ')" title="Supprimer">✕</button>'
+    + '<div class="entry-top"><h3>' + echapper(e.titre) + '</h3>'
+    + '<span class="tag ' + e.type + '">' + e.type + '</span></div>'
+    + '<div class="stars">' + etoiles(e.note) + '</div>'
+    + '<div class="date">Terminé le ' + dateAffichee + '</div>'
+    + (e.avis ? '<p class="avis">' + echapper(e.avis) + '</p>' : '')
+    + '</div></div>';
+  }
+  zone.innerHTML = html;
+}
+
+function echapper(txt) {
+  const d = document.createElement("div");
+  d.textContent = txt == null ? "" : txt;
+  return d.innerHTML;
+}
+
+/* =============================================================
+   DÉMARRAGE
+   ============================================================= */
+let minuteur;
+document.getElementById("titre").addEventListener("input", () => {
+  selection = null;
+  document.getElementById("chosen").style.display = "none";
+  clearTimeout(minuteur);
+  minuteur = setTimeout(rechercher, 350);
+});
+document.getElementById("type").addEventListener("change", rechercher);
+document.getElementById("chosenClear").addEventListener("click", effacerSelection);
+document.getElementById("ajouterBtn").addEventListener("click", ajouter);
+
+construireEtoilesFormulaire();
+charger();   // on va chercher les entrées dans Supabase
+</script>
+</body>
+</html>
