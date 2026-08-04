@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon Carnet — films, séries, livres</title>
 
-     
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -129,7 +128,11 @@
   .entry {
     display: flex; gap: 16px; background: var(--surface); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 14px; position: relative;
+    border-left: 5px solid var(--line);      /* bandeau coloré selon le type */
   }
+  .entry.film  { border-left-color: var(--film); }
+  .entry.serie { border-left-color: var(--serie); }
+  .entry.livre { border-left-color: var(--livre); }
   .entry .poster {
     width: 62px; height: 92px; object-fit: cover; border-radius: 6px;
     background: var(--line); flex: none;
@@ -144,6 +147,7 @@
   .tag.film  { background: var(--film); }
   .tag.serie { background: var(--serie); }
   .tag.livre { background: var(--livre); }
+  .entry .saison { font-size: .82rem; color: var(--muted); font-weight: 500; }
   .entry .stars { color: var(--star); letter-spacing: 2px; margin: 6px 0; }
   .entry .date  { color: var(--muted); font-size: .85rem; }
   .entry .avis  { margin: 8px 0 0; color: #33382f; }
@@ -193,6 +197,12 @@
           <div class="c-sub" id="chosenSub"></div>
         </div>
         <button class="c-clear" id="chosenClear" title="Changer">✕</button>
+      </div>
+
+      <!-- Ce bloc n'apparaît que pour les séries (géré par majSaisonRow). -->
+      <div id="saisonRow" style="display:none">
+        <label for="saison">Saison (laisse vide pour toute la série)</label>
+        <input type="text" id="saison" inputmode="numeric" placeholder="Ex : 2" autocomplete="off">
       </div>
 
       <label>Note</label>
@@ -286,6 +296,7 @@ async function ajouter() {
   const type = document.getElementById("type").value;
   const avis = document.getElementById("avis").value.trim();
   const date = document.getElementById("date").value;
+  const saisonVal = document.getElementById("saison").value.trim();
 
   if (!selection) { alert("Choisis une œuvre dans les résultats de recherche."); return; }
   if (noteChoisie === 0) { alert("Choisis une note."); return; }
@@ -300,7 +311,9 @@ async function ajouter() {
     avis:     avis,
     date_fin: date || null,
     poster:   selection.poster || "",
-    annee:    selection.annee || ""
+    annee:    selection.annee || "",
+    // La saison n'a de sens que pour une série ; sinon on met null.
+    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null
   });
 
   bouton.disabled = false;
@@ -320,10 +333,19 @@ async function supprimer(id) {
 function reinitialiserFormulaire() {
   document.getElementById("avis").value = "";
   document.getElementById("date").value = "";
+  document.getElementById("saison").value = "";
   document.getElementById("type").value = "film";
   noteChoisie = 0;
+  majSaisonRow();          // le type repasse à "film" → on masque la saison
   effacerSelection();
   construireEtoilesFormulaire();
+}
+
+// Affiche le champ Saison uniquement quand le type est "série".
+function majSaisonRow() {
+  const estSerie = document.getElementById("type").value === "serie";
+  document.getElementById("saisonRow").style.display = estSerie ? "block" : "none";
+  if (!estSerie) document.getElementById("saison").value = "";
 }
 
 /* =============================================================
@@ -435,11 +457,12 @@ function afficher() { afficherStats(); afficherJournal(); }
 function afficherStats() {
   const zone = document.getElementById("stats");
   const total = entrees.length;
-  const moyenne = total === 0 ? 0
-    : (entrees.reduce((s, e) => s + e.note, 0) / total).toFixed(1);
+  const nb = t => entrees.filter(e => e.type === t).length;   // compte par type
   zone.innerHTML =
     '<div class="stat"><div class="num">' + total + '</div><div class="lbl">entrées</div></div>'
-  + '<div class="stat"><div class="num">' + moyenne + '</div><div class="lbl">note moyenne</div></div>';
+  + '<div class="stat"><div class="num">' + nb("film")  + '</div><div class="lbl">films</div></div>'
+  + '<div class="stat"><div class="num">' + nb("serie") + '</div><div class="lbl">séries</div></div>'
+  + '<div class="stat"><div class="num">' + nb("livre") + '</div><div class="lbl">livres</div></div>';
 }
 
 function afficherJournal() {
@@ -464,12 +487,14 @@ function afficherJournal() {
     if (mois !== moisCourant) { html += '<div class="month-sep">' + mois + '</div>'; moisCourant = mois; }
     const dateAffichee = e.date_fin ? new Date(e.date_fin).toLocaleDateString("fr-FR") : "—";
     html +=
-      '<div class="entry">'
+      '<div class="entry ' + e.type + '">'
     + (e.poster ? '<img class="poster" src="' + e.poster + '" alt="">' : '')
     + '<div class="entry-body">'
     + '<button class="del" onclick="supprimer(' + e.id + ')" title="Supprimer">✕</button>'
     + '<div class="entry-top"><h3>' + echapper(e.titre) + '</h3>'
-    + '<span class="tag ' + e.type + '">' + e.type + '</span></div>'
+    + '<span class="tag ' + e.type + '">' + e.type + '</span>'
+    + ((e.type === "serie" && e.saison) ? '<span class="saison">Saison ' + e.saison + '</span>' : '')
+    + '</div>'
     + '<div class="stars">' + etoiles(e.note) + '</div>'
     + '<div class="date">Terminé le ' + dateAffichee + '</div>'
     + (e.avis ? '<p class="avis">' + echapper(e.avis) + '</p>' : '')
@@ -494,11 +519,15 @@ document.getElementById("titre").addEventListener("input", () => {
   clearTimeout(minuteur);
   minuteur = setTimeout(rechercher, 350);
 });
-document.getElementById("type").addEventListener("change", rechercher);
+document.getElementById("type").addEventListener("change", () => {
+  majSaisonRow();   // affiche/masque le champ Saison selon le type
+  rechercher();
+});
 document.getElementById("chosenClear").addEventListener("click", effacerSelection);
 document.getElementById("ajouterBtn").addEventListener("click", ajouter);
 
 construireEtoilesFormulaire();
+majSaisonRow();
 charger();   // on va chercher les entrées dans Supabase
 </script>
 </body>
