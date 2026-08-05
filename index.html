@@ -145,6 +145,16 @@
     cursor: pointer; font-size: 1rem;
   }
 
+  .controls { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .controls .ctrl, .controls .ctrl-search {
+    padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
+    font: inherit; background: var(--surface); color: var(--ink);
+  }
+  .controls .ctrl-search { flex: 1; min-width: 180px; }
+  .controls .ctrl:focus, .controls .ctrl-search:focus {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
+  }
+
   .month-sep {
     font-family: "Fraunces", serif; font-size: 1.1rem; color: var(--muted);
     margin: 28px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--line);
@@ -257,7 +267,25 @@
       <button class="btn" id="ajouterBtn">Ajouter au carnet</button>
     </div>
 
-    <div id="journal"></div>
+    <div>
+      <div class="controls">
+        <input type="text" id="q" class="ctrl-search" placeholder="Rechercher dans mes entrées…" autocomplete="off">
+        <select id="filtreType" class="ctrl">
+          <option value="tous">Tous les types</option>
+          <option value="film">Films</option>
+          <option value="serie">Séries</option>
+          <option value="livre">Livres</option>
+        </select>
+        <select id="tri" class="ctrl">
+          <option value="date_desc">Terminé — récent</option>
+          <option value="date_asc">Terminé — ancien</option>
+          <option value="note_desc">Note — haute</option>
+          <option value="note_asc">Note — basse</option>
+          <option value="titre">Titre A→Z</option>
+        </select>
+      </div>
+      <div id="journal"></div>
+    </div>
 
   </div>
 </div>
@@ -282,6 +310,11 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let entrees = [];       // rempli depuis Supabase au démarrage
 let noteChoisie = 0;
 let selection = null;   // l'œuvre choisie dans les résultats de recherche
+
+// État des contrôles du journal.
+let filtreType = "tous";
+let tri = "date_desc";
+let recherche = "";
 
 // Pourcentage de remplissage de l'étoile numéro i (1 à 5) pour une note donnée.
 // Ex : note 2.5 -> étoiles 1 et 2 pleines (100 %), étoile 3 à moitié (50 %).
@@ -552,26 +585,56 @@ function afficherStats() {
     + '</div>' + dist + '</div>';
 }
 
+// Renvoie une fonction de comparaison selon le tri choisi.
+function comparateur(mode) {
+  const parDate = (a, b, sens) => {
+    if (!a.date_fin) return 1;          // les sans-date toujours en dernier
+    if (!b.date_fin) return -1;
+    return sens * a.date_fin.localeCompare(b.date_fin);
+  };
+  if (mode === "date_desc") return (a, b) => parDate(a, b, -1);
+  if (mode === "date_asc")  return (a, b) => parDate(a, b, 1);
+  if (mode === "note_desc") return (a, b) => Number(b.note) - Number(a.note);
+  if (mode === "note_asc")  return (a, b) => Number(a.note) - Number(b.note);
+  if (mode === "titre")     return (a, b) => (a.titre || "").localeCompare(b.titre || "", "fr");
+  return () => 0;
+}
+
 function afficherJournal() {
   const zone = document.getElementById("journal");
+
   if (entrees.length === 0) {
     zone.innerHTML = '<div class="empty"><div class="big">✷</div>'
       + '<p>Ton carnet est vide.<br>Cherche ta première œuvre à gauche.</p></div>';
     return;
   }
 
-  // Tri du plus récent au plus ancien selon la date de fin.
-  const triees = [...entrees].sort((a, b) => {
-    if (!a.date_fin) return 1;
-    if (!b.date_fin) return -1;
-    return b.date_fin.localeCompare(a.date_fin);
-  });
+  // 1) On part de toutes les entrées, puis on filtre et on trie.
+  let liste = entrees.slice();
+  if (filtreType !== "tous") liste = liste.filter(e => e.type === filtreType);
+  if (recherche) {
+    const r = recherche.toLowerCase();
+    liste = liste.filter(e => (e.titre || "").toLowerCase().includes(r));
+  }
+  liste.sort(comparateur(tri));
+
+  // Aucun résultat pour les filtres en cours (mais le carnet n'est pas vide).
+  if (liste.length === 0) {
+    zone.innerHTML = '<div class="empty"><div class="big">∅</div>'
+      + '<p>Aucune entrée ne correspond à ces filtres.</p></div>';
+    return;
+  }
+
+  // 2) On regroupe par mois uniquement quand on trie par date.
+  const grouperParMois = (tri === "date_desc" || tri === "date_asc");
 
   let html = "";
   let moisCourant = "";
-  for (const e of triees) {
-    const mois = moisLisible(e.date_fin);
-    if (mois !== moisCourant) { html += '<div class="month-sep">' + mois + '</div>'; moisCourant = mois; }
+  for (const e of liste) {
+    if (grouperParMois) {
+      const mois = moisLisible(e.date_fin);
+      if (mois !== moisCourant) { html += '<div class="month-sep">' + mois + '</div>'; moisCourant = mois; }
+    }
     const dateAffichee = e.date_fin ? new Date(e.date_fin).toLocaleDateString("fr-FR") : "—";
     html +=
       '<div class="entry ' + e.type + '">'
@@ -615,6 +678,17 @@ document.getElementById("type").addEventListener("change", () => {
 });
 document.getElementById("chosenClear").addEventListener("click", effacerSelection);
 document.getElementById("ajouterBtn").addEventListener("click", ajouter);
+
+// Contrôles du journal : à chaque changement, on ré-affiche la liste filtrée.
+document.getElementById("filtreType").addEventListener("change", (ev) => {
+  filtreType = ev.target.value; afficherJournal();
+});
+document.getElementById("tri").addEventListener("change", (ev) => {
+  tri = ev.target.value; afficherJournal();
+});
+document.getElementById("q").addEventListener("input", (ev) => {
+  recherche = ev.target.value.trim(); afficherJournal();
+});
 
 construireEtoilesFormulaire();
 majSaisonRow();
