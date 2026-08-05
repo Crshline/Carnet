@@ -42,16 +42,31 @@
   header p { color: var(--muted); margin: 4px 0 0; font-size: 1.05rem; }
 
   .stats {
-    display: flex; gap: 32px; margin: 28px 0 36px; padding: 18px 24px;
-    background: var(--surface); border-radius: var(--radius);
-    box-shadow: var(--shadow); flex-wrap: wrap;
+    display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    margin: 28px 0 36px; padding: 22px 26px;
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
   }
-  .stat .num {
-    font-family: "Fraunces", serif; font-size: 1.9rem; font-weight: 600; line-height: 1;
+  .stats-hero { display: flex; flex-direction: column; }
+  .stats-hero .num-big {
+    font-family: "Fraunces", serif; font-size: 2.7rem; font-weight: 600; line-height: 1;
   }
-  .stat .lbl {
-    color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .05em;
+  .stats-hero .lbl {
+    color: var(--muted); font-size: .8rem; text-transform: uppercase;
+    letter-spacing: .06em; margin-top: 5px;
   }
+  .stats-sep { align-self: stretch; width: 1px; background: var(--line); }
+  .stats-types { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 220px; }
+  .type-row { display: flex; gap: 22px; flex-wrap: wrap; }
+  .type-stat { display: flex; align-items: baseline; gap: 7px; font-size: .92rem; color: var(--muted); }
+  .type-stat b {
+    font-family: "Fraunces", serif; font-weight: 600; font-size: 1.2rem; color: var(--ink);
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; align-self: center; }
+  .dot.film { background: var(--film); }
+  .dot.serie { background: var(--serie); }
+  .dot.livre { background: var(--livre); }
+  .dist { display: flex; height: 8px; border-radius: 6px; overflow: hidden; background: var(--bg); }
+  .dist span { display: block; height: 100%; }
 
   .layout { display: grid; grid-template-columns: 340px 1fr; gap: 32px; align-items: start; }
   @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
@@ -74,12 +89,24 @@
   }
   textarea { resize: vertical; min-height: 70px; }
 
-  .stars-input { display: flex; gap: 4px; margin-top: 6px; }
-  .stars-input button {
-    background: none; border: none; cursor: pointer; font-size: 1.7rem;
-    line-height: 1; padding: 0; color: var(--line); transition: color .1s;
+  /* Étoiles à remplissage : une étoile grise de fond, une dorée par-dessus
+     dont on règle la largeur (0, 50 ou 100 %) pour obtenir des demi-étoiles. */
+  .st {
+    position: relative; display: inline-block; width: 1em; height: 1em;
+    line-height: 1; color: var(--line);
   }
-  .stars-input button.on { color: var(--star); }
+  .st::before { content: "★"; position: absolute; left: 0; top: 0; }
+  .st .fill {
+    position: absolute; left: 0; top: 0; height: 100%; width: 0; overflow: hidden;
+    color: var(--star);
+  }
+  .st .fill::before { content: "★"; position: absolute; left: 0; top: 0; }
+  .st .half { position: absolute; top: 0; height: 100%; width: 50%; z-index: 2; }
+  .st .half.left  { left: 0; }
+  .st .half.right { right: 0; }
+  .stars-input { display: inline-flex; gap: 3px; margin-top: 6px; font-size: 1.7rem; }
+  .stars-input .st { cursor: pointer; }
+  .rating { display: inline-flex; gap: 3px; }
 
   .btn {
     width: 100%; margin-top: 22px; padding: 12px; background: var(--accent);
@@ -129,14 +156,27 @@
     display: flex; gap: 16px; background: var(--surface); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 14px; position: relative;
     border-left: 5px solid var(--line);      /* bandeau coloré selon le type */
+    transition: box-shadow .15s ease, transform .15s ease;
+  }
+  .entry:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(34,39,31,.07), 0 14px 32px rgba(34,39,31,.10);
   }
   .entry.film  { border-left-color: var(--film); }
   .entry.serie { border-left-color: var(--serie); }
   .entry.livre { border-left-color: var(--livre); }
   .entry .poster {
     width: 62px; height: 92px; object-fit: cover; border-radius: 6px;
-    background: var(--line); flex: none;
+    background: var(--line); flex: none; box-shadow: 0 2px 6px rgba(34,39,31,.15);
   }
+  /* Affiche de remplacement quand la couverture manque : initiale sur fond coloré. */
+  .entry .poster.ph {
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Fraunces", serif; font-size: 1.9rem; font-weight: 600; color: #fff;
+  }
+  .entry .poster.ph-film  { background: var(--film); }
+  .entry .poster.ph-serie { background: var(--serie); }
+  .entry .poster.ph-livre { background: var(--livre); }
   .entry-body { flex: 1; min-width: 0; }
   .entry-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .entry h3 { font-family: "Fraunces", serif; font-weight: 600; margin: 0; font-size: 1.25rem; }
@@ -148,7 +188,7 @@
   .tag.serie { background: var(--serie); }
   .tag.livre { background: var(--livre); }
   .entry .saison { font-size: .82rem; color: var(--muted); font-weight: 500; }
-  .entry .stars { color: var(--star); letter-spacing: 2px; margin: 6px 0; }
+  .entry .stars { margin: 6px 0; font-size: 1.05rem; }
   .entry .date  { color: var(--muted); font-size: .85rem; }
   .entry .avis  { margin: 8px 0 0; color: #33382f; }
   .del {
@@ -243,21 +283,53 @@ let entrees = [];       // rempli depuis Supabase au démarrage
 let noteChoisie = 0;
 let selection = null;   // l'œuvre choisie dans les résultats de recherche
 
-function etoiles(note) { return "★".repeat(note) + "☆".repeat(5 - note); }
+// Pourcentage de remplissage de l'étoile numéro i (1 à 5) pour une note donnée.
+// Ex : note 2.5 -> étoiles 1 et 2 pleines (100 %), étoile 3 à moitié (50 %).
+function fillPct(note, i) {
+  const n = Number(note);
+  if (n >= i) return 100;
+  if (n >= i - 0.5) return 50;
+  return 0;
+}
 
-/* ---------- Les étoiles cliquables du formulaire ---------- */
+// Étoiles en lecture seule, pour le journal (demi-étoiles comprises).
+function etoilesHTML(note) {
+  let html = '<span class="rating">';
+  for (let i = 1; i <= 5; i++) {
+    html += '<span class="st"><span class="fill" style="width:' + fillPct(note, i) + '%"></span></span>';
+  }
+  return html + '</span>';
+}
+
+// Met à jour le remplissage des étoiles du formulaire pour une note donnée.
+function renderNoteInput(v) {
+  document.querySelectorAll("#starsInput .st").forEach((st, idx) => {
+    st.querySelector(".fill").style.width = fillPct(v, idx + 1) + "%";
+  });
+}
+
+/* ---------- Les étoiles cliquables du formulaire (demi-étoiles) ---------- */
 function construireEtoilesFormulaire() {
   const zone = document.getElementById("starsInput");
   zone.innerHTML = "";
   for (let i = 1; i <= 5; i++) {
-    const b = document.createElement("button");
-    b.textContent = "★";
-    b.addEventListener("click", () => {
-      noteChoisie = i;
-      [...zone.children].forEach((s, idx) => s.classList.toggle("on", idx < i));
-    });
-    zone.appendChild(b);
+    const st = document.createElement("span");
+    st.className = "st";
+    st.innerHTML = '<span class="fill"></span>';
+    // Chaque étoile a deux demi-zones cliquables : gauche = i-0.5, droite = i.
+    const gauche = document.createElement("span"); gauche.className = "half left";
+    const droite = document.createElement("span"); droite.className = "half right";
+    gauche.addEventListener("click", () => { noteChoisie = i - 0.5; renderNoteInput(noteChoisie); });
+    droite.addEventListener("click", () => { noteChoisie = i;       renderNoteInput(noteChoisie); });
+    // Aperçu au survol.
+    gauche.addEventListener("mouseenter", () => renderNoteInput(i - 0.5));
+    droite.addEventListener("mouseenter", () => renderNoteInput(i));
+    st.append(gauche, droite);
+    zone.appendChild(st);
   }
+  // En quittant la zone, on revient à la note réellement choisie.
+  zone.onmouseleave = () => renderNoteInput(noteChoisie);
+  renderNoteInput(noteChoisie);
 }
 
 /* =============================================================
@@ -457,12 +529,27 @@ function afficher() { afficherStats(); afficherJournal(); }
 function afficherStats() {
   const zone = document.getElementById("stats");
   const total = entrees.length;
-  const nb = t => entrees.filter(e => e.type === t).length;   // compte par type
+  const nb = t => entrees.filter(e => e.type === t).length;
+  const f = nb("film"), s = nb("serie"), l = nb("livre");
+
+  // Barre de répartition : une portion colorée par type, proportionnelle.
+  const pct = n => total ? (n / total * 100) : 0;
+  const dist = total === 0 ? "" :
+      '<div class="dist">'
+    + (f ? '<span style="width:' + pct(f) + '%;background:var(--film)"></span>'  : '')
+    + (s ? '<span style="width:' + pct(s) + '%;background:var(--serie)"></span>' : '')
+    + (l ? '<span style="width:' + pct(l) + '%;background:var(--livre)"></span>' : '')
+    + '</div>';
+
   zone.innerHTML =
-    '<div class="stat"><div class="num">' + total + '</div><div class="lbl">entrées</div></div>'
-  + '<div class="stat"><div class="num">' + nb("film")  + '</div><div class="lbl">films</div></div>'
-  + '<div class="stat"><div class="num">' + nb("serie") + '</div><div class="lbl">séries</div></div>'
-  + '<div class="stat"><div class="num">' + nb("livre") + '</div><div class="lbl">livres</div></div>';
+      '<div class="stats-hero"><div class="num-big">' + total + '</div>'
+    + '<div class="lbl">entrées</div></div>'
+    + '<div class="stats-sep"></div>'
+    + '<div class="stats-types"><div class="type-row">'
+    +   '<span class="type-stat"><span class="dot film"></span><b>'  + f + '</b> films</span>'
+    +   '<span class="type-stat"><span class="dot serie"></span><b>' + s + '</b> séries</span>'
+    +   '<span class="type-stat"><span class="dot livre"></span><b>' + l + '</b> livres</span>'
+    + '</div>' + dist + '</div>';
 }
 
 function afficherJournal() {
@@ -488,14 +575,17 @@ function afficherJournal() {
     const dateAffichee = e.date_fin ? new Date(e.date_fin).toLocaleDateString("fr-FR") : "—";
     html +=
       '<div class="entry ' + e.type + '">'
-    + (e.poster ? '<img class="poster" src="' + e.poster + '" alt="">' : '')
+    + (e.poster
+        ? '<img class="poster" src="' + e.poster + '" alt="">'
+        : '<div class="poster ph ph-' + e.type + '">'
+          + echapper((e.titre || "?").charAt(0).toUpperCase()) + '</div>')
     + '<div class="entry-body">'
     + '<button class="del" onclick="supprimer(' + e.id + ')" title="Supprimer">✕</button>'
     + '<div class="entry-top"><h3>' + echapper(e.titre) + '</h3>'
     + '<span class="tag ' + e.type + '">' + e.type + '</span>'
     + ((e.type === "serie" && e.saison) ? '<span class="saison">Saison ' + e.saison + '</span>' : '')
     + '</div>'
-    + '<div class="stars">' + etoiles(e.note) + '</div>'
+    + '<div class="stars">' + etoilesHTML(e.note) + '</div>'
     + '<div class="date">Terminé le ' + dateAffichee + '</div>'
     + (e.avis ? '<p class="avis">' + echapper(e.avis) + '</p>' : '')
     + '</div></div>';
