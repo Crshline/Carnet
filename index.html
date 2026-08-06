@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon Carnet — films, séries, livres</title>
 
-     
 <!-- PWA : permet d'installer le site comme une appli sur le téléphone. -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2f5d50">
@@ -169,6 +168,9 @@
   }
   .ctrl-toggle { cursor: pointer; }
   .ctrl-toggle.on { border-color: var(--film); color: var(--film); }
+  #enrichBtn { cursor: pointer; }
+  #enrichBtn:hover { border-color: var(--accent); }
+  #enrichBtn:disabled { opacity: .6; cursor: default; }
 
   /* Cœur favori sur chaque entrée */
   .fav {
@@ -429,6 +431,7 @@
             <option value="serie">Séries</option>
             <option value="livre">Livres</option>
           </select>
+          <select id="filtreGenre" class="ctrl" style="display:none"></select>
           <select id="tri" class="ctrl">
             <option value="date_desc">Terminé — récent</option>
             <option value="date_asc">Terminé — ancien</option>
@@ -437,6 +440,7 @@
             <option value="titre">Titre A→Z</option>
           </select>
           <button id="favFilter" class="ctrl ctrl-toggle" title="Afficher seulement les favoris">♡ Favoris</button>
+          <button id="enrichBtn" class="ctrl" style="display:none" title="Récupérer les genres des entrées existantes">Récupérer les genres</button>
         </div>
         <div id="journal"></div>
       </div>
@@ -515,6 +519,7 @@ let filtreType = "tous";
 let tri = "date_desc";
 let recherche = "";
 let favorisOnly = false;   // n'afficher que les favoris
+let filtreGenre = "";      // filtrer sur un genre précis
 
 // État de la fenêtre de modification.
 let editId = null;
@@ -624,6 +629,8 @@ async function ajouter() {
   const bouton = document.getElementById("ajouterBtn");
   bouton.disabled = true;                       // évite le double-clic pendant l'envoi
 
+  const genres = await genresPour(type, selection);   // récupère les genres pour ce titre
+
   const { error } = await db.from("entrees").insert({
     titre:    selection.titre,
     type:     type,
@@ -633,7 +640,8 @@ async function ajouter() {
     poster:   selection.poster || "",
     annee:    selection.annee || "",
     // La saison n'a de sens que pour une série ; sinon on met null.
-    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null
+    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null,
+    genres:   genres
   });
 
   bouton.disabled = false;
@@ -830,6 +838,76 @@ async function detailsLivre(e) {
   return { synopsis, ligne, genres };
 }
 
+/* ---------- Genres ---------- */
+
+// Récupère les genres d'une œuvre. Pour films/séries on utilise l'id TMDB
+// (précis) ; pour les livres on repasse par la recherche Open Library.
+async function genresPour(type, item) {
+  try {
+    if (type === "livre") {
+      const info = await detailsLivre({ titre: item.titre });
+      return info ? info.genres : [];
+    }
+    const kind = type === "serie" ? "tv" : "movie";
+    if (item.id) {
+      const r = await fetch("https://api.themoviedb.org/3/" + kind + "/" + item.id
+        + "?api_key=" + CLE_TMDB + "&language=fr-FR");
+      if (r.ok) return ((await r.json()).genres || []).map(g => g.name);
+    }
+    return [];
+  } catch (_) { return []; }
+}
+
+// Récupère les genres de toutes les entrées qui n'en ont pas encore.
+async function enrichirGenres() {
+  const aFaire = entrees.filter(e => !e.genres || e.genres.length === 0);
+  if (aFaire.length === 0) { alert("Toutes tes entrées ont déjà leurs genres."); return; }
+
+  const btn = document.getElementById("enrichBtn");
+  const libelle = btn.textContent;
+  btn.disabled = true;
+  let ok = 0;
+  for (let i = 0; i < aFaire.length; i++) {
+    const e = aFaire[i];
+    btn.textContent = "Genres… " + (i + 1) + "/" + aFaire.length;
+    try {
+      const info = await chargerDetails(e);        // recherche par titre (+ année)
+      const g = (info && info.genres) ? info.genres : [];
+      if (g.length) { await db.from("entrees").update({ genres: g }).eq("id", e.id); ok++; }
+    } catch (_) { /* on ignore les échecs ponctuels */ }
+  }
+  btn.textContent = libelle;
+  btn.disabled = false;
+  await charger();
+  alert(ok + " entrée(s) enrichie(s) en genres.");
+}
+
+// Remplit le menu de genres et affiche/masque les contrôles selon les données.
+function majControlesGenre() {
+  const sel = document.getElementById("filtreGenre");
+  const genres = [...new Set(entrees.flatMap(e => e.genres || []))]
+    .sort((a, b) => a.localeCompare(b, "fr"));
+
+  // (Re)construction du menu via le DOM (pas de souci d'échappement).
+  sel.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = ""; opt0.textContent = "Tous les genres";
+  sel.appendChild(opt0);
+  genres.forEach(g => {
+    const o = document.createElement("option");
+    o.value = g; o.textContent = g;
+    sel.appendChild(o);
+  });
+  // On conserve la sélection courante si elle existe encore.
+  if (genres.includes(filtreGenre)) sel.value = filtreGenre;
+  else { filtreGenre = ""; sel.value = ""; }
+  sel.style.display = genres.length ? "block" : "none";
+
+  // Le bouton d'enrichissement n'apparaît que s'il reste des entrées sans genre.
+  const manquants = entrees.some(e => !e.genres || e.genres.length === 0);
+  document.getElementById("enrichBtn").style.display = manquants ? "block" : "none";
+}
+
 // La ligne Saison n'apparaît qu'une fois une série sélectionnée (via choisir).
 function majSaisonRow() {
   resetSaisonUI();
@@ -981,6 +1059,7 @@ function moisLisible(dateStr) {
 
 function afficher() {
   afficherStats();
+  majControlesGenre();
   afficherJournal();
   // Si la vue Statistiques est ouverte, on la recalcule aussi.
   const vs = document.getElementById("vueStats");
@@ -1041,6 +1120,7 @@ function afficherJournal() {
   let liste = entrees.slice();
   if (filtreType !== "tous") liste = liste.filter(e => e.type === filtreType);
   if (favorisOnly) liste = liste.filter(e => e.favori);
+  if (filtreGenre) liste = liste.filter(e => (e.genres || []).includes(filtreGenre));
   if (recherche) {
     const r = recherche.toLowerCase();
     liste = liste.filter(e => (e.titre || "").toLowerCase().includes(r));
@@ -1353,7 +1433,8 @@ async function importer(data) {
       poster:   e.poster || "",
       annee:    e.annee || "",
       saison:   (e.type === "serie" && e.saison) ? Number(e.saison) : null,
-      favori:   !!e.favori
+      favori:   !!e.favori,
+      genres:   Array.isArray(e.genres) ? e.genres : []
     });
   }
 
@@ -1404,6 +1485,12 @@ document.getElementById("favFilter").addEventListener("click", () => {
   b.textContent = (favorisOnly ? "♥" : "♡") + " Favoris";
   afficherJournal();
 });
+// Filtre par genre.
+document.getElementById("filtreGenre").addEventListener("change", (ev) => {
+  filtreGenre = ev.target.value; afficherJournal();
+});
+// Récupération des genres des entrées existantes.
+document.getElementById("enrichBtn").addEventListener("click", enrichirGenres);
 
 // Fenêtre de modification : fermeture et enregistrement.
 document.getElementById("modalClose").addEventListener("click", fermerEdition);
