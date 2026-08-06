@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon Carnet — films, séries, livres</title>
 
-     
 <!-- PWA : permet d'installer le site comme une appli sur le téléphone. -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2f5d50">
@@ -392,7 +391,7 @@
 
       <!-- Ce bloc n'apparaît que pour les séries (géré par majSaisonRow). -->
       <div id="saisonRow" style="display:none">
-        <label for="saison">Saison (laisse vide pour toute la série)</label>
+        <label for="saison">Saison</label>
         <select id="saisonSelect" style="display:none"></select>
         <input type="text" id="saison" inputmode="numeric" placeholder="Ex : 2" autocomplete="off">
       </div>
@@ -830,11 +829,9 @@ async function detailsLivre(e) {
   return { synopsis, ligne, genres };
 }
 
-// Affiche le champ Saison uniquement quand le type est "série".
+// La ligne Saison n'apparaît qu'une fois une série sélectionnée (via choisir).
 function majSaisonRow() {
-  const estSerie = document.getElementById("type").value === "serie";
-  document.getElementById("saisonRow").style.display = estSerie ? "block" : "none";
-  if (!estSerie) resetSaisonUI();
+  resetSaisonUI();
 }
 
 /* =============================================================
@@ -929,16 +926,18 @@ function choisir(item) {
   else resetSaisonUI();
 }
 
-// Remet la saisie de saison à zéro (menu masqué, champ texte visible et vide).
+// Masque la ligne Saison (menu et champ manuel) : état par défaut.
 function resetSaisonUI() {
   const sel = document.getElementById("saisonSelect");
   const inp = document.getElementById("saison");
+  document.getElementById("saisonRow").style.display = "none";
   sel.style.display = "none"; sel.innerHTML = "";
   inp.style.display = "block"; inp.value = "";
 }
 
 // Récupère les saisons d'une série sur TMDB et remplit le menu déroulant.
 async function chargerSaisons(tvId) {
+  const row = document.getElementById("saisonRow");
   const sel = document.getElementById("saisonSelect");
   const inp = document.getElementById("saison");
   try {
@@ -953,8 +952,12 @@ async function chargerSaisons(tvId) {
           return '<option value="' + s.season_number + '">Saison ' + s.season_number + nom + '</option>';
         }).join("");
     sel.style.display = "block"; inp.style.display = "none";
+    row.style.display = "block";
   } catch (_) {
-    resetSaisonUI();   // en cas d'échec, on garde la saisie manuelle
+    // Repli : on montre la saisie manuelle de la saison.
+    sel.style.display = "none"; sel.innerHTML = "";
+    inp.style.display = "block"; inp.value = "";
+    row.style.display = "block";
   }
 }
 
