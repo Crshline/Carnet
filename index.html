@@ -198,6 +198,31 @@
   .top-list { display: flex; flex-direction: column; gap: 10px; }
   .top-item { display: flex; align-items: center; gap: 10px; font-size: .95rem; }
 
+  /* Rétrospective annuelle ("Wrapped") */
+  .wrapped {
+    background: var(--accent); color: #f5f4f0; border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 24px;
+  }
+  .wrapped-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .wrapped-head h3 { font-family: "Fraunces", serif; margin: 0; font-size: 1.15rem; color: #f5f4f0; }
+  .wrapped-year {
+    background: rgba(255,255,255,.14); color: #f5f4f0; border: 1px solid rgba(255,255,255,.3);
+    border-radius: 8px; padding: 5px 8px; font: inherit; font-size: .85rem;
+  }
+  .wrapped-year option { color: #22271f; }
+  .wrapped-big { font-family: "Fraunces", serif; font-size: 3.4rem; font-weight: 600; line-height: 1; margin-top: 8px; color: var(--star); }
+  .wrapped-sub { font-size: .9rem; opacity: .9; margin-bottom: 16px; }
+  .wrapped-row { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 18px; font-size: .95rem; }
+  .wrapped-row b { font-family: "Fraunces", serif; font-size: 1.2rem; }
+  .wrapped-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .wrapped-grid .w-num { font-family: "Fraunces", serif; font-size: 1.7rem; font-weight: 600; line-height: 1.15; }
+  .wrapped-grid .w-lab, .wrapped-coup-wrap .w-lab {
+    font-size: .72rem; opacity: .85; text-transform: uppercase; letter-spacing: .04em; margin-top: 2px;
+  }
+  .wrapped-coup-wrap { margin-top: 18px; border-top: 1px solid rgba(255,255,255,.18); padding-top: 14px; }
+  .wrapped-coup { display: flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 1rem; }
+  .wrapped-empty { opacity: .9; margin: 10px 0 0; }
+
   /* Calendrier d'activité (façon contributions GitHub) */
   .hm-scroll { overflow-x: auto; padding-bottom: 4px; }
   .hm-labels { display: flex; gap: 3px; margin-bottom: 4px; }
@@ -437,6 +462,9 @@ let recherche = "";
 // État de la fenêtre de modification.
 let editId = null;
 let noteEdit = 0;
+
+// Année affichée dans la rétrospective (null = année la plus récente).
+let wrappedAnnee = null;
 
 // Pourcentage de remplissage de l'étoile numéro i (1 à 5) pour une note donnée.
 // Ex : note 2.5 -> étoiles 1 et 2 pleines (100 %), étoile 3 à moitié (50 %).
@@ -912,6 +940,7 @@ function afficherStatsPage() {
 
   zone.innerHTML =
       '<div class="stats-page">'
+    + wrappedHTML()
     + '<div class="stat-card"><h3>Vue d\'ensemble</h3>'
     +   '<div class="big-stat">' + moyenne.replace(".", ",") + '</div>'
     +   '<div class="muted-note">note moyenne sur ' + n + ' entrées</div>'
@@ -982,6 +1011,65 @@ function heatmapHTML() {
 
   return '<div class="stat-card"><h3>Calendrier d\'activité</h3>'
     + '<div class="hm-scroll">' + labels + grid + '</div>' + legende + '</div>';
+}
+
+// Calcule les chiffres d'une année (chaîne "AAAA") à partir des entrées.
+function statsAnnee(annee) {
+  const list = entrees.filter(e => e.date_fin && e.date_fin.slice(0, 4) === annee);
+  const n = list.length;
+  const nb = t => list.filter(e => e.type === t).length;
+  const moy = n ? list.reduce((s, e) => s + Number(e.note), 0) / n : 0;
+  const top = n ? [...list].sort((a, b) => Number(b.note) - Number(a.note))[0] : null;
+  const cinq = list.filter(e => Number(e.note) === 5).length;
+  const parMois = {};
+  list.forEach(e => { const m = e.date_fin.slice(0, 7); parMois[m] = (parMois[m] || 0) + 1; });
+  let moisTop = null, moisMax = 0;
+  Object.keys(parMois).forEach(m => { if (parMois[m] > moisMax) { moisMax = parMois[m]; moisTop = m; } });
+  return { n, films: nb("film"), series: nb("serie"), livres: nb("livre"), moy, top, cinq, moisTop, moisMax };
+}
+
+// Change l'année de la rétrospective et recalcule la page.
+function changerAnneeWrapped(a) { wrappedAnnee = a; afficherStatsPage(); }
+
+// Construit la carte "Wrapped" de l'année sélectionnée.
+function wrappedHTML() {
+  const annees = [...new Set(entrees.filter(e => e.date_fin).map(e => e.date_fin.slice(0, 4)))].sort().reverse();
+  if (annees.length === 0) return "";                         // aucune date → pas de rétrospective
+  if (!wrappedAnnee || !annees.includes(wrappedAnnee)) wrappedAnnee = annees[0];
+
+  const select = '<select class="wrapped-year" onchange="changerAnneeWrapped(this.value)">'
+    + annees.map(a => '<option value="' + a + '"' + (a === wrappedAnnee ? " selected" : "") + '>' + a + '</option>').join("")
+    + '</select>';
+  const head = '<div class="wrapped-head"><h3>Rétrospective</h3>' + select + '</div>';
+
+  const s = statsAnnee(wrappedAnnee);
+  if (s.n === 0) {
+    return '<div class="wrapped">' + head
+      + '<p class="wrapped-empty">Rien de terminé en ' + wrappedAnnee + '.</p></div>';
+  }
+
+  const mois = s.moisTop ? moisLisible(s.moisTop + "-01") + " (" + s.moisMax + ")" : "—";
+  const coup = s.top
+    ? '<div class="wrapped-coup-wrap"><div class="w-lab">Ton coup de cœur</div>'
+      + '<div class="wrapped-coup">' + etoilesHTML(s.top.note)
+      + '<span>' + echapper(s.top.titre)
+      + ((s.top.type === "serie" && s.top.saison) ? " · S" + s.top.saison : "") + '</span></div></div>'
+    : "";
+
+  return '<div class="wrapped">' + head
+    + '<div class="wrapped-big">' + s.n + '</div>'
+    + '<div class="wrapped-sub">œuvres terminées en ' + wrappedAnnee + '</div>'
+    + '<div class="wrapped-row">'
+    +   '<span><b>' + s.films  + '</b> films</span>'
+    +   '<span><b>' + s.series + '</b> séries</span>'
+    +   '<span><b>' + s.livres + '</b> livres</span>'
+    + '</div>'
+    + '<div class="wrapped-grid">'
+    +   '<div><div class="w-num">' + s.moy.toFixed(2).replace(".", ",") + '</div><div class="w-lab">note moyenne</div></div>'
+    +   '<div><div class="w-num">' + s.cinq + '</div><div class="w-lab">coups de 5★</div></div>'
+    +   '<div><div class="w-num" style="font-size:1.05rem">' + mois + '</div><div class="w-lab">mois le plus actif</div></div>'
+    + '</div>'
+    + coup + '</div>';
 }
 
 // Bascule entre la vue Journal et la vue Statistiques.
