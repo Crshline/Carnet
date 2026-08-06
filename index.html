@@ -174,12 +174,13 @@
     color: var(--muted); padding: 8px 4px; border-bottom: 2px solid transparent;
   }
   .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
-  .tab-export {
-    margin-left: auto; background: var(--surface); border: 1px solid var(--line);
+  .tab-actions { margin-left: auto; display: flex; gap: 6px; }
+  .tab-btn {
+    background: var(--surface); border: 1px solid var(--line);
     border-radius: 8px; padding: 7px 12px; font: inherit; font-size: .85rem;
     cursor: pointer; color: var(--ink);
   }
-  .tab-export:hover { border-color: var(--accent); }
+  .tab-btn:hover { border-color: var(--accent); }
 
   /* Page de statistiques */
   .stats-page { display: grid; gap: 20px; }
@@ -380,7 +381,11 @@
       <div class="tabs">
         <button class="tab active" id="tabJournal">Journal</button>
         <button class="tab" id="tabStats">Statistiques</button>
-        <button class="tab-export" id="exportBtn" title="Télécharger une sauvegarde">⬇ Exporter</button>
+        <span class="tab-actions">
+          <button class="tab-btn" id="importBtn" title="Restaurer une sauvegarde">⬆ Importer</button>
+          <button class="tab-btn" id="exportBtn" title="Télécharger une sauvegarde">⬇ Exporter</button>
+        </span>
+        <input type="file" id="importFile" accept="application/json,.json" style="display:none">
       </div>
 
       <div id="vueJournal">
@@ -1094,6 +1099,63 @@ function exporter() {
   URL.revokeObjectURL(url);
 }
 
+// Ouvre le sélecteur de fichier.
+function declencherImport() { document.getElementById("importFile").click(); }
+
+// Lit le fichier choisi, le valide, puis lance l'import.
+function lireImport(ev) {
+  const fichier = ev.target.files[0];
+  if (!fichier) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch { alert("Fichier illisible : ce n'est pas un JSON valide."); ev.target.value = ""; return; }
+    if (!Array.isArray(data)) {
+      alert("Format inattendu : le fichier doit contenir une liste d'entrées.");
+      ev.target.value = ""; return;
+    }
+    await importer(data);
+    ev.target.value = "";   // permet de re-sélectionner le même fichier plus tard
+  };
+  reader.readAsText(fichier);
+}
+
+// Réinjecte les entrées dans Supabase, en ignorant les doublons.
+async function importer(data) {
+  // Clé anti-doublon : même titre, type, saison et date de fin.
+  const cle = e => [e.titre, e.type, e.saison || "", e.date_fin || ""].join("|");
+  const dejaLa = new Set(entrees.map(cle));
+
+  const aInserer = [];
+  let ignores = 0;
+  for (const e of data) {
+    if (!e || !e.titre || !e.type || e.note == null) { ignores++; continue; }
+    if (dejaLa.has(cle(e))) { ignores++; continue; }
+    dejaLa.add(cle(e));                       // évite aussi les doublons internes au fichier
+    aInserer.push({
+      titre:    e.titre,
+      type:     e.type,
+      note:     Number(e.note),
+      avis:     e.avis || "",
+      date_fin: e.date_fin || null,
+      poster:   e.poster || "",
+      annee:    e.annee || "",
+      saison:   (e.type === "serie" && e.saison) ? Number(e.saison) : null
+    });
+  }
+
+  if (aInserer.length === 0) {
+    alert("Rien à importer (" + ignores + " entrée(s) déjà présente(s) ou invalide(s)).");
+    return;
+  }
+  const { error } = await db.from("entrees").insert(aInserer);
+  if (error) { alert("Erreur à l'import : " + error.message); return; }
+  await charger();
+  alert(aInserer.length + " entrée(s) importée(s)"
+    + (ignores ? ", " + ignores + " ignorée(s) (doublon ou invalide)." : "."));
+}
+
 /* =============================================================
    DÉMARRAGE
    ============================================================= */
@@ -1136,6 +1198,8 @@ document.addEventListener("keydown", (ev) => {
 document.getElementById("tabJournal").addEventListener("click", () => montrerVue("journal"));
 document.getElementById("tabStats").addEventListener("click", () => montrerVue("stats"));
 document.getElementById("exportBtn").addEventListener("click", exporter);
+document.getElementById("importBtn").addEventListener("click", declencherImport);
+document.getElementById("importFile").addEventListener("change", lireImport);
 
 construireEtoilesFormulaire();
 majSaisonRow();
