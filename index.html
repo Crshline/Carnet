@@ -176,19 +176,26 @@
   }
   .fav.on { color: var(--film); }
 
-  /* Étiquettes */
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .tagchip {
-    font-size: .75rem; background: var(--bg); border: 1px solid var(--line);
-    color: var(--muted); padding: 2px 9px; border-radius: 20px; cursor: pointer;
+  /* Fiche détaillée */
+  .entry .poster, .entry h3 { cursor: pointer; }
+  .modal-detail { max-width: 500px; }
+  .detail-head { display: flex; gap: 18px; margin-bottom: 6px; }
+  .detail-poster { width: 110px; height: 165px; object-fit: cover; border-radius: 8px; flex: none; box-shadow: 0 2px 8px rgba(34,39,31,.18); background: var(--line); }
+  .detail-meta { min-width: 0; }
+  .detail-meta h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.4rem; margin: 0 30px 4px 0; }
+  .detail-sub { color: var(--muted); font-size: .9rem; margin-bottom: 8px; }
+  .detail-stars { font-size: 1.1rem; margin-bottom: 8px; }
+  .detail-line { font-size: .9rem; margin-top: 8px; }
+  .detail-genres { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .detail-genres .genre {
+    font-size: .74rem; background: var(--bg); border: 1px solid var(--line);
+    color: var(--muted); padding: 2px 9px; border-radius: 20px;
   }
-  .tagchip:hover { border-color: var(--accent); color: var(--ink); }
-  .tag-indicator { display: none; align-items: center; gap: 8px; margin-bottom: 14px; font-size: .9rem; color: var(--muted); }
-  .tag-indicator b { color: var(--ink); }
-  .tag-indicator button {
-    background: none; border: 1px solid var(--line); border-radius: 6px;
-    cursor: pointer; color: var(--muted); padding: 2px 8px;
+  .detail-avis { margin-top: 6px; }
+  .detail-avis h3, .detail-section h3 {
+    font-family: "Fraunces", serif; font-weight: 600; font-size: 1rem; margin: 16px 0 6px;
   }
+  .detail-avis p, .detail-section p, #detailSynopsis { margin: 0; color: #33382f; line-height: 1.55; }
 
   /* Onglets Journal / Statistiques + bouton Exporter */
   .tabs { display: flex; gap: 6px; align-items: center; margin-bottom: 18px; }
@@ -397,9 +404,6 @@
       <label for="date">Terminé le</label>
       <input type="date" id="date">
 
-      <label for="tags">Étiquettes (séparées par des virgules)</label>
-      <input type="text" id="tags" placeholder="à revoir, conseillé par…" autocomplete="off">
-
       <button class="btn" id="ajouterBtn">Ajouter au carnet</button>
     </div>
 
@@ -432,7 +436,6 @@
           </select>
           <button id="favFilter" class="ctrl ctrl-toggle" title="Afficher seulement les favoris">♡ Favoris</button>
         </div>
-        <div id="tagIndicator" class="tag-indicator"></div>
         <div id="journal"></div>
       </div>
 
@@ -462,10 +465,25 @@
     <label for="dateEdit">Terminé le</label>
     <input type="date" id="dateEdit">
 
-    <label for="tagsEdit">Étiquettes (séparées par des virgules)</label>
-    <input type="text" id="tagsEdit" placeholder="à revoir, conseillé par…" autocomplete="off">
-
     <button class="btn" id="enregistrerEdit">Enregistrer</button>
+  </div>
+</div>
+
+<!-- Fiche détaillée d'une œuvre -->
+<div class="modal-bg" id="detailBg">
+  <div class="modal modal-detail">
+    <button class="modal-close" id="detailClose" title="Fermer">✕</button>
+    <div class="detail-head">
+      <img id="detailPoster" class="detail-poster" alt="">
+      <div class="detail-meta">
+        <h2 id="detailTitre"></h2>
+        <div id="detailSousTitre" class="detail-sub"></div>
+        <div id="detailStars" class="detail-stars"></div>
+        <div id="detailInfos"></div>
+      </div>
+    </div>
+    <div id="detailAvis" class="detail-avis"></div>
+    <div class="detail-section"><h3>Synopsis</h3><p id="detailSynopsis"></p></div>
   </div>
 </div>
 
@@ -495,7 +513,6 @@ let filtreType = "tous";
 let tri = "date_desc";
 let recherche = "";
 let favorisOnly = false;   // n'afficher que les favoris
-let tagActif = null;       // filtrer sur une étiquette précise
 
 // État de la fenêtre de modification.
 let editId = null;
@@ -595,7 +612,6 @@ async function ajouter() {
   const avis = document.getElementById("avis").value.trim();
   const date = document.getElementById("date").value;
   const saisonVal = document.getElementById("saison").value.trim();
-  const tags = parseTags(document.getElementById("tags").value);
 
   if (!selection) { alert("Choisis une œuvre dans les résultats de recherche."); return; }
   if (noteChoisie === 0) { alert("Choisis une note."); return; }
@@ -612,8 +628,7 @@ async function ajouter() {
     poster:   selection.poster || "",
     annee:    selection.annee || "",
     // La saison n'a de sens que pour une série ; sinon on met null.
-    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null,
-    tags:     tags
+    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null
   });
 
   bouton.disabled = false;
@@ -642,7 +657,6 @@ function ouvrirEdition(id) {
   construireEtoiles("starsEdit", () => noteEdit, v => { noteEdit = v; });
   document.getElementById("avisEdit").value = e.avis || "";
   document.getElementById("dateEdit").value = e.date_fin || "";
-  document.getElementById("tagsEdit").value = (e.tags || []).join(", ");
 
   const rowS = document.getElementById("saisonRowEdit");
   if (e.type === "serie") {
@@ -670,7 +684,6 @@ async function enregistrerEdition() {
   const avis = document.getElementById("avisEdit").value.trim();
   const date = document.getElementById("dateEdit").value;
   const saisonVal = document.getElementById("saisonEdit").value.trim();
-  const tags = parseTags(document.getElementById("tagsEdit").value);
 
   const btn = document.getElementById("enregistrerEdit");
   btn.disabled = true;
@@ -678,8 +691,7 @@ async function enregistrerEdition() {
     note:     noteEdit,
     avis:     avis,
     date_fin: date || null,
-    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null,
-    tags:     tags
+    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null
   }).eq("id", editId);
   btn.disabled = false;
 
@@ -692,7 +704,6 @@ function reinitialiserFormulaire() {
   document.getElementById("avis").value = "";
   document.getElementById("date").value = "";
   document.getElementById("saison").value = "";
-  document.getElementById("tags").value = "";
   document.getElementById("type").value = "film";
   noteChoisie = 0;
   majSaisonRow();          // le type repasse à "film" → on masque la saison
@@ -700,17 +711,7 @@ function reinitialiserFormulaire() {
   construireEtoilesFormulaire();
 }
 
-/* ---------- Favoris et étiquettes ---------- */
-
-// "à revoir, culte ,à revoir" -> ["à revoir", "culte"] (nettoyé, sans doublon).
-function parseTags(str) {
-  return [...new Set((str || "").split(",").map(t => t.trim()).filter(Boolean))];
-}
-
-// Échappe une chaîne pour l'utiliser dans un attribut HTML (guillemets compris).
-function attrSafe(txt) {
-  return echapper(txt).replace(/"/g, "&quot;");
-}
+/* ---------- Favori ---------- */
 
 // Bascule l'état favori d'une entrée.
 async function basculerFavori(id) {
@@ -721,28 +722,107 @@ async function basculerFavori(id) {
   await charger();
 }
 
-// Filtre le journal sur une étiquette précise.
-function filtrerParTag(tag) {
-  tagActif = tag;
-  majTagIndicator();
-  afficherJournal();
-}
-function effacerTagFilter() {
-  tagActif = null;
-  majTagIndicator();
-  afficherJournal();
-}
-function majTagIndicator() {
-  const el = document.getElementById("tagIndicator");
-  if (tagActif) {
-    el.style.display = "flex";
-    el.innerHTML = 'Étiquette : <b>' + echapper(tagActif) + '</b> '
-      + '<button id="clearTag" title="Retirer le filtre">✕</button>';
-    document.getElementById("clearTag").onclick = effacerTagFilter;
-  } else {
-    el.style.display = "none";
-    el.innerHTML = "";
+/* ---------- Fiche détaillée ----------
+   On affiche d'abord ce qu'on a déjà (affiche, note, avis), puis on va
+   chercher le synopsis, le réalisateur/auteur et les genres via TMDB
+   ou Open Library, qu'on remplit quand la réponse arrive. */
+
+const TYPE_LABEL = { film: "Film", serie: "Série", livre: "Livre" };
+
+async function ouvrirDetail(id) {
+  const e = entrees.find(x => x.id === id);
+  if (!e) return;
+
+  const poster = document.getElementById("detailPoster");
+  if (e.poster) { poster.src = e.poster; poster.style.display = "block"; }
+  else { poster.removeAttribute("src"); poster.style.display = "none"; }
+
+  document.getElementById("detailTitre").textContent = e.titre;
+  document.getElementById("detailSousTitre").textContent =
+    [e.annee, TYPE_LABEL[e.type], (e.type === "serie" && e.saison) ? "Saison " + e.saison : null]
+      .filter(Boolean).join(" · ");
+  document.getElementById("detailStars").innerHTML = etoilesHTML(e.note);
+  document.getElementById("detailAvis").innerHTML =
+    e.avis ? '<h3>Mon avis</h3><p>' + echapper(e.avis) + '</p>' : "";
+  document.getElementById("detailInfos").innerHTML = "";
+  document.getElementById("detailSynopsis").textContent = "Chargement…";
+  document.getElementById("detailBg").classList.add("open");
+
+  try {
+    const info = await chargerDetails(e);
+    if (!info) { document.getElementById("detailSynopsis").textContent = "Aucun détail trouvé."; return; }
+    document.getElementById("detailSynopsis").textContent = info.synopsis || "Pas de synopsis disponible.";
+    let h = "";
+    if (info.ligne) h += '<div class="detail-line">' + echapper(info.ligne) + '</div>';
+    if (info.genres && info.genres.length) {
+      h += '<div class="detail-genres">'
+        + info.genres.map(g => '<span class="genre">' + echapper(g) + '</span>').join("")
+        + '</div>';
+    }
+    document.getElementById("detailInfos").innerHTML = h;
+  } catch (err) {
+    document.getElementById("detailSynopsis").textContent = "Détails indisponibles pour le moment.";
   }
+}
+
+function fermerDetail() { document.getElementById("detailBg").classList.remove("open"); }
+
+// Route vers la bonne source selon le type.
+async function chargerDetails(e) {
+  if (e.type === "livre") return await detailsLivre(e);
+  return await detailsTMDB(e, e.type === "serie" ? "tv" : "movie");
+}
+
+async function detailsTMDB(e, kind) {
+  const anneeParam = e.annee
+    ? "&" + (kind === "movie" ? "year" : "first_air_date_year") + "=" + e.annee : "";
+  const rech = "https://api.themoviedb.org/3/search/" + kind + "?api_key=" + CLE_TMDB
+    + "&language=fr-FR&query=" + encodeURIComponent(e.titre) + anneeParam;
+  const r1 = await fetch(rech);
+  if (!r1.ok) throw new Error("TMDB " + r1.status);
+  const trouve = ((await r1.json()).results || [])[0];
+  if (!trouve) return null;
+
+  const det = "https://api.themoviedb.org/3/" + kind + "/" + trouve.id + "?api_key=" + CLE_TMDB
+    + "&language=fr-FR&append_to_response=credits";
+  const r2 = await fetch(det);
+  if (!r2.ok) throw new Error("TMDB " + r2.status);
+  const d = await r2.json();
+
+  const genres = (d.genres || []).map(g => g.name);
+  let ligne = "";
+  if (kind === "movie") {
+    const real = ((d.credits && d.credits.crew) || []).filter(c => c.job === "Director").map(c => c.name);
+    if (real.length) ligne = "Réalisation : " + real.join(", ");
+  } else {
+    const cr = (d.created_by || []).map(c => c.name);
+    if (cr.length) ligne = "Création : " + cr.join(", ");
+  }
+  return { synopsis: d.overview || "", ligne, genres };
+}
+
+async function detailsLivre(e) {
+  const url = "https://openlibrary.org/search.json?limit=1"
+    + "&fields=key,author_name,first_publish_year,subject&title=" + encodeURIComponent(e.titre);
+  const r1 = await fetch(url);
+  if (!r1.ok) throw new Error("Open Library " + r1.status);
+  const doc = ((await r1.json()).docs || [])[0];
+  if (!doc) return null;
+
+  let synopsis = "";
+  if (doc.key) {
+    try {
+      const r2 = await fetch("https://openlibrary.org" + doc.key + ".json");
+      if (r2.ok) {
+        const w = await r2.json();
+        synopsis = typeof w.description === "string" ? w.description
+                 : (w.description && w.description.value) ? w.description.value : "";
+      }
+    } catch (_) { /* description facultative */ }
+  }
+  const ligne = doc.author_name ? "Auteur : " + doc.author_name.slice(0, 2).join(", ") : "";
+  const genres = (doc.subject || []).slice(0, 4);
+  return { synopsis, ligne, genres };
 }
 
 // Affiche le champ Saison uniquement quand le type est "série".
@@ -918,7 +998,6 @@ function afficherJournal() {
   let liste = entrees.slice();
   if (filtreType !== "tous") liste = liste.filter(e => e.type === filtreType);
   if (favorisOnly) liste = liste.filter(e => e.favori);
-  if (tagActif) liste = liste.filter(e => (e.tags || []).includes(tagActif));
   if (recherche) {
     const r = recherche.toLowerCase();
     liste = liste.filter(e => (e.titre || "").toLowerCase().includes(r));
@@ -943,16 +1022,11 @@ function afficherJournal() {
       if (mois !== moisCourant) { html += '<div class="month-sep">' + mois + '</div>'; moisCourant = mois; }
     }
     const dateAffichee = e.date_fin ? new Date(e.date_fin).toLocaleDateString("fr-FR") : "—";
-    const tagsHtml = (e.tags && e.tags.length)
-      ? '<div class="tags">' + e.tags.map(t =>
-          '<span class="tagchip" data-tag="' + attrSafe(t) + '">' + echapper(t) + '</span>'
-        ).join("") + '</div>'
-      : "";
     html +=
       '<div class="entry ' + e.type + '">'
     + (e.poster
-        ? '<img class="poster" src="' + e.poster + '" alt="">'
-        : '<div class="poster ph ph-' + e.type + '">'
+        ? '<img class="poster" src="' + e.poster + '" alt="" onclick="ouvrirDetail(' + e.id + ')">'
+        : '<div class="poster ph ph-' + e.type + '" onclick="ouvrirDetail(' + e.id + ')">'
           + echapper((e.titre || "?").charAt(0).toUpperCase()) + '</div>')
     + '<div class="entry-body">'
     + '<button class="del" onclick="supprimer(' + e.id + ')" title="Supprimer">✕</button>'
@@ -960,14 +1034,13 @@ function afficherJournal() {
     + '<div class="entry-top">'
     + '<button class="fav' + (e.favori ? ' on' : '') + '" onclick="basculerFavori(' + e.id + ')" title="Favori">'
     + (e.favori ? '♥' : '♡') + '</button>'
-    + '<h3>' + echapper(e.titre) + '</h3>'
+    + '<h3 onclick="ouvrirDetail(' + e.id + ')">' + echapper(e.titre) + '</h3>'
     + '<span class="tag ' + e.type + '">' + e.type + '</span>'
     + ((e.type === "serie" && e.saison) ? '<span class="saison">Saison ' + e.saison + '</span>' : '')
     + '</div>'
     + '<div class="stars">' + etoilesHTML(e.note) + '</div>'
     + '<div class="date">Terminé le ' + dateAffichee + '</div>'
     + (e.avis ? '<p class="avis">' + echapper(e.avis) + '</p>' : '')
-    + tagsHtml
     + '</div></div>';
   }
   zone.innerHTML = html;
@@ -1237,8 +1310,7 @@ async function importer(data) {
       poster:   e.poster || "",
       annee:    e.annee || "",
       saison:   (e.type === "serie" && e.saison) ? Number(e.saison) : null,
-      favori:   !!e.favori,
-      tags:     Array.isArray(e.tags) ? e.tags : []
+      favori:   !!e.favori
     });
   }
 
@@ -1288,11 +1360,6 @@ document.getElementById("favFilter").addEventListener("click", () => {
   b.textContent = (favorisOnly ? "♥" : "♡") + " Favoris";
   afficherJournal();
 });
-// Clic sur une étiquette d'entrée → filtre par cette étiquette (délégation).
-document.getElementById("journal").addEventListener("click", (ev) => {
-  const chip = ev.target.closest(".tagchip");
-  if (chip) filtrerParTag(chip.dataset.tag);
-});
 
 // Fenêtre de modification : fermeture et enregistrement.
 document.getElementById("modalClose").addEventListener("click", fermerEdition);
@@ -1300,8 +1367,13 @@ document.getElementById("enregistrerEdit").addEventListener("click", enregistrer
 document.getElementById("modalBg").addEventListener("click", (ev) => {
   if (ev.target.id === "modalBg") fermerEdition();   // clic sur le fond → ferme
 });
+// Fiche détaillée : fermeture.
+document.getElementById("detailClose").addEventListener("click", fermerDetail);
+document.getElementById("detailBg").addEventListener("click", (ev) => {
+  if (ev.target.id === "detailBg") fermerDetail();
+});
 document.addEventListener("keydown", (ev) => {
-  if (ev.key === "Escape") fermerEdition();
+  if (ev.key === "Escape") { fermerEdition(); fermerDetail(); }
 });
 
 // Onglets et export.
