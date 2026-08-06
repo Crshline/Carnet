@@ -80,7 +80,7 @@
   .layout { display: grid; grid-template-columns: 340px 1fr; gap: 32px; align-items: start; }
   @media (max-width: 760px) {
     .layout { grid-template-columns: 1fr; }
-    .panel { position: static; }   /* plus de "sticky" en une seule colonne */
+    .layout .panel { position: static; }   /* sélecteur plus spécifique → gagne sur le sticky */
   }
 
   .panel {
