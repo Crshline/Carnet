@@ -392,6 +392,7 @@
       <!-- Ce bloc n'apparaît que pour les séries (géré par majSaisonRow). -->
       <div id="saisonRow" style="display:none">
         <label for="saison">Saison (laisse vide pour toute la série)</label>
+        <select id="saisonSelect" style="display:none"></select>
         <input type="text" id="saison" inputmode="numeric" placeholder="Ex : 2" autocomplete="off">
       </div>
 
@@ -611,7 +612,10 @@ async function ajouter() {
   const type = document.getElementById("type").value;
   const avis = document.getElementById("avis").value.trim();
   const date = document.getElementById("date").value;
-  const saisonVal = document.getElementById("saison").value.trim();
+  const sel = document.getElementById("saisonSelect");
+  const saisonVal = (type === "serie")
+    ? (sel.style.display !== "none" ? sel.value : document.getElementById("saison").value.trim())
+    : "";
 
   if (!selection) { alert("Choisis une œuvre dans les résultats de recherche."); return; }
   if (noteChoisie === 0) { alert("Choisis une note."); return; }
@@ -829,7 +833,7 @@ async function detailsLivre(e) {
 function majSaisonRow() {
   const estSerie = document.getElementById("type").value === "serie";
   document.getElementById("saisonRow").style.display = estSerie ? "block" : "none";
-  if (!estSerie) document.getElementById("saison").value = "";
+  if (!estSerie) resetSaisonUI();
 }
 
 /* =============================================================
@@ -844,6 +848,7 @@ async function chercherTMDB(query, kind) {
   if (!rep.ok) throw new Error("TMDB a répondu " + rep.status);
   const data = await rep.json();
   return (data.results || []).slice(0, 6).map(r => ({
+    id:     r.id,
     titre:  r.title || r.name,
     annee:  (r.release_date || r.first_air_date || "").slice(0, 4),
     poster: r.poster_path ? "https://image.tmdb.org/t/p/w154" + r.poster_path : "",
@@ -918,6 +923,38 @@ function choisir(item) {
   document.getElementById("chosenTitle").textContent = item.titre;
   document.getElementById("chosenSub").textContent =
     [item.annee, item.sous].filter(Boolean).join(" · ");
+  // Pour une série, on tente de proposer ses saisons automatiquement.
+  if (document.getElementById("type").value === "serie" && item.id) chargerSaisons(item.id);
+  else resetSaisonUI();
+}
+
+// Remet la saisie de saison à zéro (menu masqué, champ texte visible et vide).
+function resetSaisonUI() {
+  const sel = document.getElementById("saisonSelect");
+  const inp = document.getElementById("saison");
+  sel.style.display = "none"; sel.innerHTML = "";
+  inp.style.display = "block"; inp.value = "";
+}
+
+// Récupère les saisons d'une série sur TMDB et remplit le menu déroulant.
+async function chargerSaisons(tvId) {
+  const sel = document.getElementById("saisonSelect");
+  const inp = document.getElementById("saison");
+  try {
+    const r = await fetch("https://api.themoviedb.org/3/tv/" + tvId + "?api_key=" + CLE_TMDB + "&language=fr-FR");
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    const saisons = (d.seasons || []).filter(s => s.season_number >= 1);   // on saute les "Spéciaux"
+    if (!saisons.length) throw 0;
+    sel.innerHTML = '<option value="">Toute la série</option>'
+      + saisons.map(s => {
+          const nom = (s.name && !/^saison/i.test(s.name)) ? " — " + s.name : "";
+          return '<option value="' + s.season_number + '">Saison ' + s.season_number + nom + '</option>';
+        }).join("");
+    sel.style.display = "block"; inp.style.display = "none";
+  } catch (_) {
+    resetSaisonUI();   // en cas d'échec, on garde la saisie manuelle
+  }
 }
 
 function effacerSelection() {
@@ -925,6 +962,7 @@ function effacerSelection() {
   document.getElementById("chosen").style.display = "none";
   document.getElementById("titre").value = "";
   document.getElementById("results").innerHTML = "";
+  resetSaisonUI();
 }
 
 /* =============================================================
@@ -1332,6 +1370,7 @@ let minuteur;
 document.getElementById("titre").addEventListener("input", () => {
   selection = null;
   document.getElementById("chosen").style.display = "none";
+  resetSaisonUI();
   clearTimeout(minuteur);
   minuteur = setTimeout(rechercher, 350);
 });
