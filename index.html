@@ -166,6 +166,29 @@
   .controls .ctrl:focus, .controls .ctrl-search:focus {
     outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
   }
+  .ctrl-toggle { cursor: pointer; }
+  .ctrl-toggle.on { border-color: var(--film); color: var(--film); }
+
+  /* Cœur favori sur chaque entrée */
+  .fav {
+    background: none; border: none; cursor: pointer; font-size: 1.15rem;
+    padding: 0; color: var(--line); align-self: center; line-height: 1;
+  }
+  .fav.on { color: var(--film); }
+
+  /* Étiquettes */
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tagchip {
+    font-size: .75rem; background: var(--bg); border: 1px solid var(--line);
+    color: var(--muted); padding: 2px 9px; border-radius: 20px; cursor: pointer;
+  }
+  .tagchip:hover { border-color: var(--accent); color: var(--ink); }
+  .tag-indicator { display: none; align-items: center; gap: 8px; margin-bottom: 14px; font-size: .9rem; color: var(--muted); }
+  .tag-indicator b { color: var(--ink); }
+  .tag-indicator button {
+    background: none; border: 1px solid var(--line); border-radius: 6px;
+    cursor: pointer; color: var(--muted); padding: 2px 8px;
+  }
 
   /* Onglets Journal / Statistiques + bouton Exporter */
   .tabs { display: flex; gap: 6px; align-items: center; margin-bottom: 18px; }
@@ -374,6 +397,9 @@
       <label for="date">Terminé le</label>
       <input type="date" id="date">
 
+      <label for="tags">Étiquettes (séparées par des virgules)</label>
+      <input type="text" id="tags" placeholder="à revoir, conseillé par…" autocomplete="off">
+
       <button class="btn" id="ajouterBtn">Ajouter au carnet</button>
     </div>
 
@@ -404,7 +430,9 @@
             <option value="note_asc">Note — basse</option>
             <option value="titre">Titre A→Z</option>
           </select>
+          <button id="favFilter" class="ctrl ctrl-toggle" title="Afficher seulement les favoris">♡ Favoris</button>
         </div>
+        <div id="tagIndicator" class="tag-indicator"></div>
         <div id="journal"></div>
       </div>
 
@@ -433,6 +461,9 @@
 
     <label for="dateEdit">Terminé le</label>
     <input type="date" id="dateEdit">
+
+    <label for="tagsEdit">Étiquettes (séparées par des virgules)</label>
+    <input type="text" id="tagsEdit" placeholder="à revoir, conseillé par…" autocomplete="off">
 
     <button class="btn" id="enregistrerEdit">Enregistrer</button>
   </div>
@@ -463,6 +494,8 @@ let selection = null;   // l'œuvre choisie dans les résultats de recherche
 let filtreType = "tous";
 let tri = "date_desc";
 let recherche = "";
+let favorisOnly = false;   // n'afficher que les favoris
+let tagActif = null;       // filtrer sur une étiquette précise
 
 // État de la fenêtre de modification.
 let editId = null;
@@ -562,6 +595,7 @@ async function ajouter() {
   const avis = document.getElementById("avis").value.trim();
   const date = document.getElementById("date").value;
   const saisonVal = document.getElementById("saison").value.trim();
+  const tags = parseTags(document.getElementById("tags").value);
 
   if (!selection) { alert("Choisis une œuvre dans les résultats de recherche."); return; }
   if (noteChoisie === 0) { alert("Choisis une note."); return; }
@@ -578,7 +612,8 @@ async function ajouter() {
     poster:   selection.poster || "",
     annee:    selection.annee || "",
     // La saison n'a de sens que pour une série ; sinon on met null.
-    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null
+    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null,
+    tags:     tags
   });
 
   bouton.disabled = false;
@@ -607,6 +642,7 @@ function ouvrirEdition(id) {
   construireEtoiles("starsEdit", () => noteEdit, v => { noteEdit = v; });
   document.getElementById("avisEdit").value = e.avis || "";
   document.getElementById("dateEdit").value = e.date_fin || "";
+  document.getElementById("tagsEdit").value = (e.tags || []).join(", ");
 
   const rowS = document.getElementById("saisonRowEdit");
   if (e.type === "serie") {
@@ -634,6 +670,7 @@ async function enregistrerEdition() {
   const avis = document.getElementById("avisEdit").value.trim();
   const date = document.getElementById("dateEdit").value;
   const saisonVal = document.getElementById("saisonEdit").value.trim();
+  const tags = parseTags(document.getElementById("tagsEdit").value);
 
   const btn = document.getElementById("enregistrerEdit");
   btn.disabled = true;
@@ -641,7 +678,8 @@ async function enregistrerEdition() {
     note:     noteEdit,
     avis:     avis,
     date_fin: date || null,
-    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null
+    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null,
+    tags:     tags
   }).eq("id", editId);
   btn.disabled = false;
 
@@ -654,11 +692,57 @@ function reinitialiserFormulaire() {
   document.getElementById("avis").value = "";
   document.getElementById("date").value = "";
   document.getElementById("saison").value = "";
+  document.getElementById("tags").value = "";
   document.getElementById("type").value = "film";
   noteChoisie = 0;
   majSaisonRow();          // le type repasse à "film" → on masque la saison
   effacerSelection();
   construireEtoilesFormulaire();
+}
+
+/* ---------- Favoris et étiquettes ---------- */
+
+// "à revoir, culte ,à revoir" -> ["à revoir", "culte"] (nettoyé, sans doublon).
+function parseTags(str) {
+  return [...new Set((str || "").split(",").map(t => t.trim()).filter(Boolean))];
+}
+
+// Échappe une chaîne pour l'utiliser dans un attribut HTML (guillemets compris).
+function attrSafe(txt) {
+  return echapper(txt).replace(/"/g, "&quot;");
+}
+
+// Bascule l'état favori d'une entrée.
+async function basculerFavori(id) {
+  const e = entrees.find(x => x.id === id);
+  if (!e) return;
+  const { error } = await db.from("entrees").update({ favori: !e.favori }).eq("id", id);
+  if (error) { alert("Erreur : " + error.message); return; }
+  await charger();
+}
+
+// Filtre le journal sur une étiquette précise.
+function filtrerParTag(tag) {
+  tagActif = tag;
+  majTagIndicator();
+  afficherJournal();
+}
+function effacerTagFilter() {
+  tagActif = null;
+  majTagIndicator();
+  afficherJournal();
+}
+function majTagIndicator() {
+  const el = document.getElementById("tagIndicator");
+  if (tagActif) {
+    el.style.display = "flex";
+    el.innerHTML = 'Étiquette : <b>' + echapper(tagActif) + '</b> '
+      + '<button id="clearTag" title="Retirer le filtre">✕</button>';
+    document.getElementById("clearTag").onclick = effacerTagFilter;
+  } else {
+    el.style.display = "none";
+    el.innerHTML = "";
+  }
 }
 
 // Affiche le champ Saison uniquement quand le type est "série".
@@ -833,6 +917,8 @@ function afficherJournal() {
   // 1) On part de toutes les entrées, puis on filtre et on trie.
   let liste = entrees.slice();
   if (filtreType !== "tous") liste = liste.filter(e => e.type === filtreType);
+  if (favorisOnly) liste = liste.filter(e => e.favori);
+  if (tagActif) liste = liste.filter(e => (e.tags || []).includes(tagActif));
   if (recherche) {
     const r = recherche.toLowerCase();
     liste = liste.filter(e => (e.titre || "").toLowerCase().includes(r));
@@ -857,6 +943,11 @@ function afficherJournal() {
       if (mois !== moisCourant) { html += '<div class="month-sep">' + mois + '</div>'; moisCourant = mois; }
     }
     const dateAffichee = e.date_fin ? new Date(e.date_fin).toLocaleDateString("fr-FR") : "—";
+    const tagsHtml = (e.tags && e.tags.length)
+      ? '<div class="tags">' + e.tags.map(t =>
+          '<span class="tagchip" data-tag="' + attrSafe(t) + '">' + echapper(t) + '</span>'
+        ).join("") + '</div>'
+      : "";
     html +=
       '<div class="entry ' + e.type + '">'
     + (e.poster
@@ -866,13 +957,17 @@ function afficherJournal() {
     + '<div class="entry-body">'
     + '<button class="del" onclick="supprimer(' + e.id + ')" title="Supprimer">✕</button>'
     + '<button class="edit" onclick="ouvrirEdition(' + e.id + ')" title="Modifier">✎</button>'
-    + '<div class="entry-top"><h3>' + echapper(e.titre) + '</h3>'
+    + '<div class="entry-top">'
+    + '<button class="fav' + (e.favori ? ' on' : '') + '" onclick="basculerFavori(' + e.id + ')" title="Favori">'
+    + (e.favori ? '♥' : '♡') + '</button>'
+    + '<h3>' + echapper(e.titre) + '</h3>'
     + '<span class="tag ' + e.type + '">' + e.type + '</span>'
     + ((e.type === "serie" && e.saison) ? '<span class="saison">Saison ' + e.saison + '</span>' : '')
     + '</div>'
     + '<div class="stars">' + etoilesHTML(e.note) + '</div>'
     + '<div class="date">Terminé le ' + dateAffichee + '</div>'
     + (e.avis ? '<p class="avis">' + echapper(e.avis) + '</p>' : '')
+    + tagsHtml
     + '</div></div>';
   }
   zone.innerHTML = html;
@@ -1141,7 +1236,9 @@ async function importer(data) {
       date_fin: e.date_fin || null,
       poster:   e.poster || "",
       annee:    e.annee || "",
-      saison:   (e.type === "serie" && e.saison) ? Number(e.saison) : null
+      saison:   (e.type === "serie" && e.saison) ? Number(e.saison) : null,
+      favori:   !!e.favori,
+      tags:     Array.isArray(e.tags) ? e.tags : []
     });
   }
 
@@ -1182,6 +1279,19 @@ document.getElementById("tri").addEventListener("change", (ev) => {
 });
 document.getElementById("q").addEventListener("input", (ev) => {
   recherche = ev.target.value.trim(); afficherJournal();
+});
+// Filtre favoris (bascule).
+document.getElementById("favFilter").addEventListener("click", () => {
+  favorisOnly = !favorisOnly;
+  const b = document.getElementById("favFilter");
+  b.classList.toggle("on", favorisOnly);
+  b.textContent = (favorisOnly ? "♥" : "♡") + " Favoris";
+  afficherJournal();
+});
+// Clic sur une étiquette d'entrée → filtre par cette étiquette (délégation).
+document.getElementById("journal").addEventListener("click", (ev) => {
+  const chip = ev.target.closest(".tagchip");
+  if (chip) filtrerParTag(chip.dataset.tag);
 });
 
 // Fenêtre de modification : fermeture et enregistrement.
