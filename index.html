@@ -317,6 +317,14 @@
   .card-serie  { border-top-color: var(--serie); }
   .card-livre  { border-top-color: var(--livre); }
   .card-star   { border-top-color: var(--star); }
+  /* "Vue d'ensemble" en mini-bandeau pétrole à cercles */
+  .vue-hero { position: relative; overflow: hidden; background: var(--hero); color: var(--hero-text); border-top: none; }
+  .vue-hero h3 { color: var(--hero-text); }
+  .vue-hero .c1 { position: absolute; top: -38px; right: -18px; width: 128px; height: 128px; border-radius: 50%; background: #d9a94e; }
+  .vue-hero .c2 { position: absolute; top: 18px; right: 38px; width: 92px; height: 92px; border-radius: 50%; background: rgba(214,124,90,.78); }
+  .vue-body { position: relative; }
+  .vue-big { font-family: "Instrument Serif", serif; font-size: 3.6rem; line-height: 1; color: var(--star); margin-top: 4px; }
+  .vue-sub { color: rgba(240,233,219,.85); font-size: .9rem; margin-top: 6px; }
   /* Barres du bloc genres */
   .gbar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: .88rem; }
   .gbar-lab { width: 130px; flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
@@ -1396,11 +1404,12 @@ function afficherStatsPage() {
   zone.innerHTML =
       '<div class="stats-page">'
     + wrappedHTML()
-    + '<div class="stat-card card-accent"><h3>Vue d\'ensemble</h3>'
-    +   '<div class="big-stat">' + moyenne.replace(".", ",") + '</div>'
-    +   '<div class="muted-note">note moyenne sur ' + n + ' entrées</div>'
-    +   '<div class="muted-note" style="margin-top:8px">Mois le plus actif : ' + moisTop + '</div>'
-    + '</div>'
+    + '<div class="stat-card vue-hero"><div class="c1"></div><div class="c2"></div><div class="vue-body">'
+    +   '<h3>Vue d\'ensemble</h3>'
+    +   '<div class="vue-big">' + moyenne.replace(".", ",") + '</div>'
+    +   '<div class="vue-sub">note moyenne sur ' + n + ' entrées</div>'
+    +   '<div class="vue-sub">Mois le plus actif — ' + moisTop + '</div>'
+    + '</div></div>'
     + genresBlockHTML()
     + heatmapHTML()
     + '<div class="stat-card card-serie"><h3>Œuvres par année</h3>' + distAnnees + '</div>'
@@ -1425,19 +1434,17 @@ function genresBlockHTML() {
     '<button class="tp' + (v === genreSupport ? " active" : "") + '" data-type="' + v + '"'
     + ' onclick="changerGenreSupport(\'' + v + '\')">' + l + '</button>').join("") + '</div>';
 
-  const rot = ["var(--film)", "var(--serie)", "var(--livre)", "var(--star)"];
-  const coul = genreSupport === "tous" ? null : "var(--" + genreSupport + ")";
+  const coul = genreSupport === "tous" ? "var(--accent)" : "var(--" + genreSupport + ")";
 
   let bars;
   if (genres.length === 0) {
     bars = '<p class="muted-note">Aucun genre pour ce support. '
       + 'Charge-les via « Récupérer les genres » dans le journal.</p>';
   } else {
-    bars = genres.map((g, i) => {
-      const c = coul || rot[i % rot.length];
+    bars = genres.map((g) => {
       const pct = compte[g] / max * 100;
       return '<div class="gbar"><span class="gbar-lab" title="' + echapper(g) + '">' + echapper(g) + '</span>'
-        + '<span class="gbar-track"><span class="gbar-fill" style="width:' + pct + '%;background:' + c + '"></span></span>'
+        + '<span class="gbar-track"><span class="gbar-fill" style="width:' + pct + '%;background:' + coul + '"></span></span>'
         + '<span class="gbar-val">' + compte[g] + '</span></div>';
     }).join("");
   }
