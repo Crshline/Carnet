@@ -140,8 +140,9 @@
   .panel {
     background: var(--surface); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 24px; position: sticky; top: 24px;
+    border-top: 4px solid var(--film);
   }
-  .panel h2 { font-family: "Instrument Serif", serif; font-weight: 600; margin: 0 0 20px; font-size: 1.3rem; }
+  .panel h2 { font-family: "Instrument Serif", serif; margin: 0 0 20px; font-size: 1.7rem; }
   label {
     display: block; font-size: .82rem; font-weight: 500; color: var(--muted);
     margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .04em;
@@ -211,20 +212,45 @@
     cursor: pointer; font-size: 1rem;
   }
 
-  .controls { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-  .controls .ctrl, .controls .ctrl-search {
-    padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
-    font: inherit; background: var(--surface); color: var(--ink);
+  .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }
+  .ctrl-search {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px;
+    font: inherit; background: var(--surface); color: var(--ink); box-sizing: border-box;
   }
-  .controls .ctrl-search { flex: 1; min-width: 180px; }
-  .controls .ctrl:focus, .controls .ctrl-search:focus {
-    outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
+  .ctrl-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .controls-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .controls-row2 { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+
+  /* Pastilles de type colorées */
+  .type-pills { display: flex; gap: 7px; flex-wrap: wrap; }
+  .tp {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+    padding: 5px 14px; font: inherit; font-size: .82rem; cursor: pointer; color: var(--ink);
   }
-  .ctrl-toggle { cursor: pointer; }
-  .ctrl-toggle.on { border-color: var(--film); color: var(--film); }
-  #enrichBtn { cursor: pointer; }
-  #enrichBtn:hover { border-color: var(--accent); }
-  #enrichBtn:disabled { opacity: .6; cursor: default; }
+  .tp[data-type="film"]  { color: var(--film); }
+  .tp[data-type="serie"] { color: var(--serie); }
+  .tp[data-type="livre"] { color: var(--livre); }
+  .tp.active { color: #fff; border-color: transparent; }
+  .tp.active[data-type="tous"]  { background: var(--accent); }
+  .tp.active[data-type="film"]  { background: var(--film); }
+  .tp.active[data-type="serie"] { background: var(--serie); }
+  .tp.active[data-type="livre"] { background: var(--livre); }
+
+  /* Favoris discret */
+  .fav-toggle {
+    margin-left: auto; background: none; border: none; cursor: pointer;
+    color: var(--muted); font: inherit; font-size: .85rem; padding: 5px 4px;
+  }
+  .fav-toggle.on { color: var(--film); }
+
+  /* Menus fins (genre, tri) et bouton genres */
+  .ctrl-mini {
+    background: transparent; border: none; border-bottom: 1.5px solid var(--line);
+    border-radius: 0; padding: 4px 2px; font: inherit; font-size: .85rem; color: var(--muted); cursor: pointer;
+  }
+  .ctrl-mini:focus { outline: none; border-bottom-color: var(--accent); }
+  .btn-mini { color: var(--film); }
+  .btn-mini:disabled { opacity: .6; cursor: default; }
 
   /* Cœur favori sur chaque entrée */
   .fav {
@@ -281,9 +307,9 @@
   .stats-page { display: grid; gap: 20px; }
   .stat-card {
     background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 20px 22px;
+    padding: 20px 22px; border-top: 3px solid var(--film);
   }
-  .stat-card h3 { font-family: "Instrument Serif", serif; font-weight: 600; margin: 0 0 14px; font-size: 1.1rem; }
+  .stat-card h3 { font-family: "Instrument Serif", serif; margin: 0 0 14px; font-size: 1.35rem; }
   .big-stat { font-family: "Instrument Serif", serif; font-size: 2.4rem; font-weight: 600; line-height: 1; }
   .muted-note { color: var(--muted); font-size: .85rem; }
   .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .9rem; }
@@ -306,7 +332,7 @@
   .hero-top { display: flex; justify-content: space-between; align-items: baseline; }
   .hero-label { font-size: .68rem; letter-spacing: .26em; text-transform: uppercase; color: rgba(240,233,219,.7); }
   .hero-year {
-    flex: none; background: var(--hero-text); color: var(--hero);
+    flex: none; width: auto; background: var(--hero-text); color: var(--hero);
     border: none; border-radius: 20px; padding: 4px 12px; font: inherit; font-size: .8rem;
     letter-spacing: .1em; cursor: pointer;
   }
@@ -534,22 +560,26 @@
       <div id="vueJournal">
         <div class="controls">
           <input type="text" id="q" class="ctrl-search" placeholder="Rechercher dans mes entrées…" autocomplete="off">
-          <select id="filtreType" class="ctrl">
-            <option value="tous">Tous les types</option>
-            <option value="film">Films</option>
-            <option value="serie">Séries</option>
-            <option value="livre">Livres</option>
-          </select>
-          <select id="filtreGenre" class="ctrl" style="display:none"></select>
-          <select id="tri" class="ctrl">
-            <option value="date_desc">Terminé — récent</option>
-            <option value="date_asc">Terminé — ancien</option>
-            <option value="note_desc">Note — haute</option>
-            <option value="note_asc">Note — basse</option>
-            <option value="titre">Titre A→Z</option>
-          </select>
-          <button id="favFilter" class="ctrl ctrl-toggle" title="Afficher seulement les favoris">♡ Favoris</button>
-          <button id="enrichBtn" class="ctrl" style="display:none" title="Récupérer les genres des entrées existantes">Récupérer les genres</button>
+          <div class="controls-row">
+            <div class="type-pills" id="typePills">
+              <button class="tp active" data-type="tous">Tous</button>
+              <button class="tp" data-type="film">Films</button>
+              <button class="tp" data-type="serie">Séries</button>
+              <button class="tp" data-type="livre">Livres</button>
+            </div>
+            <button id="favFilter" class="fav-toggle" title="Afficher seulement les favoris">♡ Favoris</button>
+          </div>
+          <div class="controls-row2">
+            <select id="filtreGenre" class="ctrl-mini" style="display:none"></select>
+            <select id="tri" class="ctrl-mini">
+              <option value="date_desc">Terminé — récent</option>
+              <option value="date_asc">Terminé — ancien</option>
+              <option value="note_desc">Note — haute</option>
+              <option value="note_asc">Note — basse</option>
+              <option value="titre">Titre A→Z</option>
+            </select>
+            <button id="enrichBtn" class="ctrl-mini btn-mini" style="display:none" title="Récupérer les genres des entrées existantes">Récupérer les genres</button>
+          </div>
         </div>
         <div id="journal"></div>
       </div>
@@ -1578,8 +1608,13 @@ document.getElementById("chosenClear").addEventListener("click", effacerSelectio
 document.getElementById("ajouterBtn").addEventListener("click", ajouter);
 
 // Contrôles du journal : à chaque changement, on ré-affiche la liste filtrée.
-document.getElementById("filtreType").addEventListener("change", (ev) => {
-  filtreType = ev.target.value; afficherJournal();
+// Pastilles de type (Tous / Films / Séries / Livres).
+document.getElementById("typePills").addEventListener("click", (ev) => {
+  const b = ev.target.closest(".tp");
+  if (!b) return;
+  filtreType = b.dataset.type;
+  document.querySelectorAll("#typePills .tp").forEach(x => x.classList.toggle("active", x === b));
+  afficherJournal();
 });
 document.getElementById("tri").addEventListener("change", (ev) => {
   tri = ev.target.value; afficherJournal();
