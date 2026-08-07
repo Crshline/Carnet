@@ -310,7 +310,26 @@
     padding: 20px 22px; border-top: 3px solid var(--film);
   }
   .stat-card h3 { font-family: "Instrument Serif", serif; margin: 0 0 14px; font-size: 1.35rem; }
-  .big-stat { font-family: "Instrument Serif", serif; font-size: 2.4rem; font-weight: 600; line-height: 1; }
+  .big-stat { font-family: "Instrument Serif", serif; font-size: 3.2rem; line-height: 1; color: var(--film); }
+  /* Filets colorés variés en tête des cartes de stats */
+  .card-accent { border-top-color: var(--accent); }
+  .card-film   { border-top-color: var(--film); }
+  .card-serie  { border-top-color: var(--serie); }
+  .card-livre  { border-top-color: var(--livre); }
+  .card-star   { border-top-color: var(--star); }
+  /* Barres du bloc genres */
+  .gbar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: .88rem; }
+  .gbar-lab { width: 130px; flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+  .gbar-track { flex: 1; height: 13px; background: var(--bg); border-radius: 7px; overflow: hidden; }
+  .gbar-fill { display: block; height: 100%; border-radius: 7px; }
+  .gbar-val { width: 26px; text-align: right; color: var(--muted); flex: none; }
+  /* Affiches du top "Mieux notées" */
+  .top-poster { width: 36px; height: 52px; object-fit: cover; border-radius: 5px; flex: none; background: var(--line); }
+  .top-poster.ph { display: flex; align-items: center; justify-content: center; font-family: "Instrument Serif", serif; font-size: 1.2rem; color: #f2ede3; }
+  .top-poster.ph-film  { background: var(--film); }
+  .top-poster.ph-serie { background: var(--serie); }
+  .top-poster.ph-livre { background: var(--livre); }
+  .top-title { font-family: "Instrument Serif", serif; font-size: 1.15rem; line-height: 1.1; }
   .muted-note { color: var(--muted); font-size: .85rem; }
   .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .9rem; }
   .bar-row .bar-label { width: 64px; color: var(--muted); flex: none; }
@@ -318,7 +337,7 @@
   .bar-row .bar-fill { display: block; height: 100%; background: var(--accent); }
   .bar-row .bar-val { width: 26px; text-align: right; color: var(--muted); flex: none; }
   .top-list { display: flex; flex-direction: column; gap: 10px; }
-  .top-item { display: flex; align-items: center; gap: 10px; font-size: .95rem; }
+  .top-item { display: flex; align-items: center; gap: 12px; font-size: .95rem; }
 
   /* Rétrospective annuelle ("Wrapped") */
   .hero {
@@ -670,6 +689,8 @@ let noteEdit = 0;
 
 // Année affichée dans la rétrospective (null = année la plus récente).
 let wrappedAnnee = null;
+// Support choisi dans le bloc "Répartition des genres".
+let genreSupport = "tous";
 
 // Pourcentage de remplissage de l'étoile numéro i (1 à 5) pour une note donnée.
 // Ex : note 2.5 -> étoiles 1 et 2 pleines (100 %), étoile 3 à moitié (50 %).
@@ -1322,10 +1343,11 @@ function echapper(txt) {
    ============================================================= */
 
 // Une ligne de mini-graphique : libellé, barre proportionnelle, valeur.
-function barRow(label, val, max) {
+function barRow(label, val, max, color) {
   const pct = max ? (val / max * 100) : 0;
+  const style = 'width:' + pct + '%' + (color ? ';background:' + color : '');
   return '<div class="bar-row"><span class="bar-label">' + echapper(label) + '</span>'
-    + '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>'
+    + '<span class="bar-track"><span class="bar-fill" style="' + style + '"></span></span>'
     + '<span class="bar-val">' + val + '</span></div>';
 }
 
@@ -1340,22 +1362,13 @@ function afficherStatsPage() {
 
   const moyenne = (entrees.reduce((s, e) => s + Number(e.note), 0) / n).toFixed(2);
 
-  // Répartition des notes (de 5 à 0,5).
-  const valeurs = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5];
-  const compteNote = {}; valeurs.forEach(v => compteNote[v] = 0);
-  entrees.forEach(e => { const v = Number(e.note); if (compteNote[v] !== undefined) compteNote[v]++; });
-  const maxNote = Math.max(1, ...valeurs.map(v => compteNote[v]));
-  const distNotes = valeurs
-    .map(v => barRow(String(v).replace(".", ",") + " ★", compteNote[v], maxNote))
-    .join("");
-
   // Œuvres par année (d'après la date de fin).
   const parAnnee = {};
   entrees.forEach(e => { if (e.date_fin) { const y = e.date_fin.slice(0, 4); parAnnee[y] = (parAnnee[y] || 0) + 1; } });
   const annees = Object.keys(parAnnee).sort();
   const maxAnnee = Math.max(1, ...annees.map(y => parAnnee[y]));
   const distAnnees = annees.length
-    ? annees.map(y => barRow(y, parAnnee[y], maxAnnee)).join("")
+    ? annees.map(y => barRow(y, parAnnee[y], maxAnnee, "var(--serie)")).join("")
     : '<p class="muted-note">Aucune date renseignée pour l\'instant.</p>';
 
   // Mois le plus actif.
@@ -1368,27 +1381,68 @@ function afficherStatsPage() {
     moisTop = moisLisible(best + "-01") + " — " + parMois[best] + " entrée" + (parMois[best] > 1 ? "s" : "");
   }
 
-  // Mieux notées (top 5).
+  // Mieux notées (top 5), avec affiche.
   const top = [...entrees].sort((a, b) => Number(b.note) - Number(a.note)).slice(0, 5);
   const topHtml = top.map(e =>
-    '<div class="top-item">' + etoilesHTML(e.note)
-    + '<span>' + echapper(e.titre)
-    + ((e.type === "serie" && e.saison) ? " · S" + e.saison : "") + '</span></div>'
+    '<div class="top-item">'
+    + (e.poster
+        ? '<img class="top-poster" src="' + e.poster + '" alt="">'
+        : '<span class="top-poster ph ph-' + e.type + '">' + echapper((e.titre || "?").charAt(0).toUpperCase()) + '</span>')
+    + '<div class="top-body"><div class="top-title">' + echapper(e.titre)
+    +   ((e.type === "serie" && e.saison) ? " · S" + e.saison : "") + '</div>'
+    +   '<div>' + etoilesHTML(e.note) + '</div></div></div>'
   ).join("");
 
   zone.innerHTML =
       '<div class="stats-page">'
     + wrappedHTML()
-    + '<div class="stat-card"><h3>Vue d\'ensemble</h3>'
+    + '<div class="stat-card card-accent"><h3>Vue d\'ensemble</h3>'
     +   '<div class="big-stat">' + moyenne.replace(".", ",") + '</div>'
     +   '<div class="muted-note">note moyenne sur ' + n + ' entrées</div>'
     +   '<div class="muted-note" style="margin-top:8px">Mois le plus actif : ' + moisTop + '</div>'
     + '</div>'
-    + '<div class="stat-card"><h3>Répartition des notes</h3>' + distNotes + '</div>'
+    + genresBlockHTML()
     + heatmapHTML()
-    + '<div class="stat-card"><h3>Œuvres par année</h3>' + distAnnees + '</div>'
-    + '<div class="stat-card"><h3>Mieux notées</h3><div class="top-list">' + topHtml + '</div></div>'
+    + '<div class="stat-card card-serie"><h3>Œuvres par année</h3>' + distAnnees + '</div>'
+    + '<div class="stat-card card-star"><h3>Mieux notées</h3><div class="top-list">' + topHtml + '</div></div>'
     + '</div>';
+}
+
+// Change le support (film/série/livre) du bloc genres.
+function changerGenreSupport(s) { genreSupport = s; afficherStatsPage(); }
+
+// Bloc "Répartition des genres" : pastilles de support + barres classées.
+function genresBlockHTML() {
+  let list = entrees;
+  if (genreSupport !== "tous") list = entrees.filter(e => e.type === genreSupport);
+  const compte = {};
+  list.forEach(e => (e.genres || []).forEach(g => { compte[g] = (compte[g] || 0) + 1; }));
+  const genres = Object.keys(compte).sort((a, b) => compte[b] - compte[a]).slice(0, 8);
+  const max = Math.max(1, ...genres.map(g => compte[g]));
+
+  const supports = [["tous", "Tous"], ["film", "Films"], ["serie", "Séries"], ["livre", "Livres"]];
+  const pills = '<div class="type-pills">' + supports.map(([v, l]) =>
+    '<button class="tp' + (v === genreSupport ? " active" : "") + '" data-type="' + v + '"'
+    + ' onclick="changerGenreSupport(\'' + v + '\')">' + l + '</button>').join("") + '</div>';
+
+  const rot = ["var(--film)", "var(--serie)", "var(--livre)", "var(--star)"];
+  const coul = genreSupport === "tous" ? null : "var(--" + genreSupport + ")";
+
+  let bars;
+  if (genres.length === 0) {
+    bars = '<p class="muted-note">Aucun genre pour ce support. '
+      + 'Charge-les via « Récupérer les genres » dans le journal.</p>';
+  } else {
+    bars = genres.map((g, i) => {
+      const c = coul || rot[i % rot.length];
+      const pct = compte[g] / max * 100;
+      return '<div class="gbar"><span class="gbar-lab" title="' + echapper(g) + '">' + echapper(g) + '</span>'
+        + '<span class="gbar-track"><span class="gbar-fill" style="width:' + pct + '%;background:' + c + '"></span></span>'
+        + '<span class="gbar-val">' + compte[g] + '</span></div>';
+    }).join("");
+  }
+  return '<div class="stat-card card-film"><h3>Répartition des genres</h3>' + pills
+    + '<div style="margin-top:16px">' + bars + '</div></div>';
 }
 
 // Renvoie 'YYYY-MM-DD' pour une date locale (sans souci de fuseau horaire).
@@ -1447,7 +1501,7 @@ function heatmapHTML() {
     + [0, 1, 2, 3, 4].map(l => '<span class="hm-cell hm-' + l + '"></span>').join("")
     + ' Plus</div>';
 
-  return '<div class="stat-card"><h3>Calendrier d\'activité</h3>'
+  return '<div class="stat-card card-livre"><h3>Calendrier d\'activité</h3>'
     + '<div class="hm-scroll">' + labels + grid + '</div>' + legende + '</div>';
 }
 
