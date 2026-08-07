@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon Carnet — films, séries, livres</title>
 
-   
 <!-- PWA : permet d'installer le site comme une appli sur le téléphone. -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2f5d50">
@@ -14,6 +13,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mon Carnet">
+
+<!-- Applique le thème sombre immédiatement (avant l'affichage) pour éviter un flash. -->
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("carnet-theme");
+      if (t === "dark" || (t === null && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    } catch (e) {}
+  })();
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,21 +46,59 @@
     --film:      #b0413a;
     --serie:     #4a6fa5;
     --livre:     #4f7a4a;
+    --field:     #fbfbf9;   /* fond des champs de saisie */
+    --hover:     #f2f4ee;   /* fond au survol / sélection */
+    --text2:     #33382f;   /* texte secondaire (avis, synopsis) */
+    --hm1:       #cfe0d6;   /* dégradé du calendrier (peu -> beaucoup) */
+    --hm2:       #9cc3ad;
+    --hm3:       #5f9e7e;
+    --hm4:       #2f5d50;
     --radius:    12px;
     --shadow:    0 1px 2px rgba(34,39,31,.06), 0 8px 24px rgba(34,39,31,.05);
+  }
+  /* Jeu de couleurs sombre (appliqué via la classe .dark sur <html>). */
+  :root.dark {
+    --bg:        #171c18;
+    --surface:   #20261f;
+    --ink:       #e9ebe4;
+    --muted:     #99a094;
+    --line:      #333a32;
+    --accent:    #4c8a73;
+    --star:      #e0b155;
+    --film:      #c8564d;
+    --serie:     #5f86bd;
+    --livre:     #6aa063;
+    --field:     #262d25;
+    --hover:     #262d25;
+    --text2:     #c8ccc2;
+    --hm1:       #24402f;
+    --hm2:       #356b4c;
+    --hm3:       #4f9e73;
+    --hm4:       #79d3a0;
+    --shadow:    0 1px 2px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.30);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font-family: "IBM Plex Sans", system-ui, sans-serif; line-height: 1.5;
+    transition: background-color .2s ease, color .2s ease;
   }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
 
+  header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  }
   header h1 {
     font-family: "Fraunces", serif; font-weight: 900;
     font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.02em; margin: 0;
   }
   header p { color: var(--muted); margin: 4px 0 0; font-size: 1.05rem; }
+  .theme-btn {
+    flex: none; background: var(--surface); border: 1px solid var(--line);
+    color: var(--ink); border-radius: 10px; width: 42px; height: 42px;
+    font-size: 1.15rem; cursor: pointer; line-height: 1; box-shadow: var(--shadow);
+  }
+  .theme-btn:hover { border-color: var(--accent); }
 
   .stats {
     display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
@@ -95,7 +144,7 @@
   }
   input[type="text"], input[type="date"], textarea, select {
     width: 100%; padding: 10px 12px; border: 1px solid var(--line);
-    border-radius: 8px; font: inherit; color: var(--ink); background: #fbfbf9;
+    border-radius: 8px; font: inherit; color: var(--ink); background: var(--field);
   }
   input:focus, textarea:focus, select:focus {
     outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
@@ -140,7 +189,7 @@
     border-bottom: 1px solid var(--line);
   }
   .result:last-child { border-bottom: none; }
-  .result:hover { background: #f2f4ee; }
+  .result:hover { background: var(--hover); }
   .result img { width: 34px; height: 50px; object-fit: cover; border-radius: 3px; background: var(--line); flex: none; }
   .result .r-title { font-weight: 600; font-size: .92rem; }
   .result .r-sub { color: var(--muted); font-size: .8rem; }
@@ -148,7 +197,7 @@
 
   .chosen {
     display: none; gap: 10px; align-items: center; margin-top: 10px;
-    padding: 8px; background: #f2f4ee; border-radius: 8px;
+    padding: 8px; background: var(--hover); border-radius: 8px;
   }
   .chosen img { width: 38px; height: 56px; object-fit: cover; border-radius: 4px; background: var(--line); flex: none; }
   .chosen .c-title { font-weight: 600; font-size: .92rem; line-height: 1.2; }
@@ -199,7 +248,7 @@
   .detail-avis h3, .detail-section h3 {
     font-family: "Fraunces", serif; font-weight: 600; font-size: 1rem; margin: 16px 0 6px;
   }
-  .detail-avis p, .detail-section p, #detailSynopsis { margin: 0; color: #33382f; line-height: 1.55; }
+  .detail-avis p, .detail-section p, #detailSynopsis { margin: 0; color: var(--text2); line-height: 1.55; }
 
   /* Onglets Journal / Statistiques + bouton Exporter */
   .tabs { display: flex; gap: 6px; align-items: center; margin-bottom: 18px; }
@@ -266,10 +315,10 @@
   .hm-col { display: flex; flex-direction: column; gap: 3px; }
   .hm-cell { width: 11px; height: 11px; border-radius: 2px; flex: none; display: inline-block; }
   .hm-0 { background: var(--line); }
-  .hm-1 { background: #cfe0d6; }
-  .hm-2 { background: #9cc3ad; }
-  .hm-3 { background: #5f9e7e; }
-  .hm-4 { background: #2f5d50; }
+  .hm-1 { background: var(--hm1); }
+  .hm-2 { background: var(--hm2); }
+  .hm-3 { background: var(--hm3); }
+  .hm-4 { background: var(--hm4); }
   .hm-empty { background: transparent; }
   .hm-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-size: .78rem; color: var(--muted); }
 
@@ -318,7 +367,7 @@
   .entry .saison { font-size: .82rem; color: var(--muted); font-weight: 500; }
   .entry .stars { margin: 6px 0; font-size: 1.05rem; }
   .entry .date  { color: var(--muted); font-size: .85rem; }
-  .entry .avis  { margin: 8px 0 0; color: #33382f; }
+  .entry .avis  { margin: 8px 0 0; color: var(--text2); }
   .del {
     position: absolute; top: 14px; right: 14px; background: none; border: none;
     cursor: pointer; color: var(--line); font-size: 1.1rem; padding: 4px;
@@ -360,8 +409,11 @@
 <div class="wrap">
 
   <header>
-    <h1>Mon Carnet</h1>
-    <p>Ce que j'ai vu, regardé et lu.</p>
+    <div>
+      <h1>Mon Carnet</h1>
+      <p>Ce que j'ai vu, regardé et lu — noté et daté.</p>
+    </div>
+    <button id="themeBtn" class="theme-btn" title="Basculer clair / sombre" aria-label="Basculer le thème">☾</button>
   </header>
 
   <div class="stats" id="stats"></div>
@@ -1492,6 +1544,18 @@ document.getElementById("filtreGenre").addEventListener("change", (ev) => {
 });
 // Récupération des genres des entrées existantes.
 document.getElementById("enrichBtn").addEventListener("click", enrichirGenres);
+
+// Thème clair / sombre.
+function majThemeIcon() {
+  document.getElementById("themeBtn").textContent =
+    document.documentElement.classList.contains("dark") ? "☀" : "☾";
+}
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const dark = document.documentElement.classList.toggle("dark");
+  try { localStorage.setItem("carnet-theme", dark ? "dark" : "light"); } catch (e) {}
+  majThemeIcon();
+});
+majThemeIcon();
 
 // Fenêtre de modification : fermeture et enregistrement.
 document.getElementById("modalClose").addEventListener("click", fermerEdition);
