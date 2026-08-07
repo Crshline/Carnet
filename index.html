@@ -304,6 +304,1733 @@
   .tab-btn:hover { border-color: var(--accent); }
 
   /* Page de statistiques */
+  .stats-page {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px; align-items: start;
+  }
+  .stats-page > .hero, .stats-page > .card-full { grid-column: 1 / -1; }
+  .stat-card {
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 20px 22px; border-top: 3px solid var(--film);
+  }
+  .stat-card h3 { font-family: "Instrument Serif", serif; margin: 0 0 14px; font-size: 1.35rem; }
+  .big-stat { font-family: "Instrument Serif", serif; font-size: 3.2rem; line-height: 1; color: var(--film); }
+  /* Filets colorés variés en tête des cartes de stats */
+  .card-accent { border-top-color: var(--accent); }
+  .card-film   { border-top-color: var(--film); }
+  .card-serie  { border-top-color: var(--serie); }
+  .card-livre  { border-top-color: var(--livre); }
+  .card-star   { border-top-color: var(--star); }
+  /* "Vue d'ensemble" en mini-bandeau pétrole à cercles */
+  .vue-hero { position: relative; overflow: hidden; background: var(--hero); color: var(--hero-text); border-top: none; }
+  .vue-hero h3 { color: var(--hero-text); }
+  .vue-hero .c1 { position: absolute; top: -38px; right: -18px; width: 128px; height: 128px; border-radius: 50%; background: #d9a94e; }
+  .vue-hero .c2 { position: absolute; top: 18px; right: 38px; width: 92px; height: 92px; border-radius: 50%; background: rgba(214,124,90,.78); }
+  .vue-body { position: relative; }
+  .vue-big { font-family: "Instrument Serif", serif; font-size: 3.6rem; line-height: 1; color: var(--star); margin-top: 4px; }
+  .vue-sub { color: rgba(240,233,219,.85); font-size: .9rem; margin-top: 6px; }
+  /* "Mieux notées" en carte pétrole à cercles, avec affiches en médaillons */
+  .mieux-hero { position: relative; overflow: hidden; background: var(--hero); color: var(--hero-text); border-top: none; }
+  .mieux-hero h3 { color: var(--hero-text); }
+  .mieux-hero .c1 { position: absolute; top: -40px; right: -22px; width: 120px; height: 120px; border-radius: 50%; background: #d9a94e; }
+  .mieux-hero .c2 { position: absolute; top: 22px; right: 44px; width: 88px; height: 88px; border-radius: 50%; background: rgba(214,124,90,.78); }
+  .mieux-hero .top-title { color: var(--hero-text); }
+  .top-body { flex: 1; min-width: 0; }
+  .top-score { font-family: "Instrument Serif", serif; font-size: 1.5rem; color: var(--hero-text); flex: none; }
+  /* Barres du bloc genres */
+  .gbar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: .88rem; }
+  .gbar-lab { width: 96px; flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+  .gbar-track { flex: 1; height: 13px; background: var(--bg); border-radius: 7px; overflow: hidden; }
+  .gbar-fill { display: block; height: 100%; border-radius: 7px; }
+  .gbar-val { width: 26px; text-align: right; color: var(--muted); flex: none; }
+  /* Affiches du top "Mieux notées" */
+  .top-poster { width: 36px; height: 52px; object-fit: cover; border-radius: 5px; flex: none; background: var(--line); }
+  .top-poster.ph { display: flex; align-items: center; justify-content: center; font-family: "Instrument Serif", serif; font-size: 1.2rem; color: #f2ede3; }
+  .top-poster.ph-film  { background: var(--film); }
+  .top-poster.ph-serie { background: var(--serie); }
+  .top-poster.ph-livre { background: var(--livre); }
+  .top-title { font-family: "Instrument Serif", serif; font-size: 1.15rem; line-height: 1.1; }
+  .muted-note { color: var(--muted); font-size: .85rem; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .9rem; }
+  .bar-row .bar-label { width: 64px; color: var(--muted); flex: none; }
+  .bar-row .bar-track { flex: 1; height: 10px; background: var(--bg); border-radius: 6px; overflow: hidden; }
+  .bar-row .bar-fill { display: block; height: 100%; background: var(--accent); }
+  .bar-row .bar-val { width: 26px; text-align: right; color: var(--muted); flex: none; }
+  .top-list { display: flex; flex-direction: column; gap: 10px; }
+  .top-item { display: flex; align-items: center; gap: 12px; font-size: .95rem; }
+
+  /* Rétrospective annuelle ("Wrapped") */
+  .hero {
+    position: relative; overflow: hidden;
+    background: var(--hero); color: var(--hero-text);
+    border-radius: 18px; box-shadow: var(--shadow); padding: 30px 30px 26px;
+  }
+  .hero .c1 { position: absolute; top: -44px; right: -24px; width: 172px; height: 172px; border-radius: 50%; background: #d9a94e; }
+  .hero .c2 { position: absolute; top: 24px; right: 52px; width: 130px; height: 130px; border-radius: 50%; background: rgba(214,124,90,.78); }
+  .hero-body { position: relative; }
+  .hero-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .hero-label { font-size: .68rem; letter-spacing: .26em; text-transform: uppercase; color: rgba(240,233,219,.7); }
+  .hero-year {
+    flex: none; width: auto; background: var(--hero-text); color: var(--hero);
+    border: none; border-radius: 20px; padding: 4px 12px; font: inherit; font-size: .8rem;
+    letter-spacing: .1em; cursor: pointer;
+  }
+  .hero-numrow { display: flex; align-items: flex-end; gap: 20px; margin-top: 2px; }
+  .hero-big { font-family: "Instrument Serif", serif; font-size: 6.5rem; line-height: .82; }
+  .hero-legend { font-family: "Instrument Serif", serif; font-style: italic; font-size: 1.4rem; line-height: 1.15; padding-bottom: 14px; max-width: 160px; color: #e7dcc8; }
+  .hero-metrics { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; color: #c9d2c6; margin-top: 16px; }
+  .hero-metrics .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
+  .hero-metrics .dim { color: #8fa096; }
+  .hero-coup { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(240,233,219,.16); font-size: .9rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .hero-coup .lbl { font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; color: rgba(240,233,219,.7); }
+  .hero-empty { color: rgba(240,233,219,.85); margin: 12px 0 0; }
+
+  /* Calendrier d'activité (façon contributions GitHub) */
+  .hm-scroll { overflow-x: auto; padding-bottom: 4px; }
+  .hm-labels { display: flex; gap: 3px; margin-bottom: 4px; }
+  .hm-lab { width: 11px; flex: none; font-size: .62rem; color: var(--muted); white-space: nowrap; }
+  .hm-grid { display: flex; gap: 3px; }
+  .hm-col { display: flex; flex-direction: column; gap: 3px; }
+  .hm-cell { width: 11px; height: 11px; border-radius: 2px; flex: none; display: inline-block; }
+  .hm-0 { background: var(--line); }
+  .hm-1 { background: var(--hm1); }
+  .hm-2 { background: var(--hm2); }
+  .hm-3 { background: var(--hm3); }
+  .hm-4 { background: var(--hm4); }
+  .hm-empty { background: transparent; }
+  .hm-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-size: .78rem; color: var(--muted); }
+
+  /* Galerie d'affiches */
+  .gallery {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 30px 22px; align-items: start;
+  }
+  .month-sep {
+    grid-column: 1 / -1;
+    font-family: "Instrument Serif", serif; font-size: 1.5rem; color: var(--muted);
+    margin: 10px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+    text-transform: capitalize;
+  }
+  .month-sep:first-child { margin-top: 0; }
+
+  .tile-poster-none {}
+  .poster-wrap { position: relative; }
+  .tile .poster {
+    width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 10px;
+    background: var(--line); display: block; cursor: pointer;
+    box-shadow: 0 6px 18px rgba(34,28,22,.18);
+  }
+  .tile .poster.ph {
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Instrument Serif", serif; font-size: 3.2rem; color: #f2ede3;
+  }
+  .tile .poster.ph-film  { background: var(--film); }
+  .tile .poster.ph-serie { background: var(--serie); }
+  .tile .poster.ph-livre { background: var(--livre); }
+  .tile-fav {
+    position: absolute; top: 9px; right: 9px; background: none; border: none;
+    cursor: pointer; font-size: 1.05rem; line-height: 1; padding: 0;
+    color: rgba(242,237,227,.6); text-shadow: 0 1px 3px rgba(0,0,0,.4);
+  }
+  .tile-fav.on { color: #f2ede3; }
+  .tile-score {
+    position: absolute; bottom: -14px; left: 10px; width: 44px; height: 44px;
+    border-radius: 50%; background: var(--hero); color: var(--hero-text);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Instrument Serif", serif; font-size: 1.2rem;
+    box-shadow: 0 3px 8px rgba(34,28,22,.25);
+  }
+  .tile-title {
+    font-family: "Instrument Serif", serif; font-size: 1.4rem; line-height: 1.05;
+    margin-top: 20px; cursor: pointer;
+  }
+  .tile-meta {
+    font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--muted); margin-top: 5px;
+  }
+  .tile-meta .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+  .entry {
+    display: flex; gap: 16px; background: var(--surface); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 14px; position: relative;
+    border-left: 5px solid var(--line);      /* bandeau coloré selon le type */
+    transition: box-shadow .15s ease, transform .15s ease;
+  }
+  .entry:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(34,39,31,.07), 0 14px 32px rgba(34,39,31,.10);
+  }
+  .entry.film  { border-left-color: var(--film); }
+  .entry.serie { border-left-color: var(--serie); }
+  .entry.livre { border-left-color: var(--livre); }
+  .entry .poster {
+    width: 62px; height: 92px; object-fit: cover; border-radius: 6px;
+    background: var(--line); flex: none; box-shadow: 0 2px 6px rgba(34,39,31,.15);
+  }
+  /* Affiche de remplacement quand la couverture manque : initiale sur fond coloré. */
+  .entry .poster.ph {
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Instrument Serif", serif; font-size: 1.9rem; font-weight: 600; color: #fff;
+  }
+  .entry .poster.ph-film  { background: var(--film); }
+  .entry .poster.ph-serie { background: var(--serie); }
+  .entry .poster.ph-livre { background: var(--livre); }
+  .entry-body { flex: 1; min-width: 0; padding-right: 44px; }
+  .entry-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .entry h3 { font-family: "Instrument Serif", serif; font-weight: 600; margin: 0; font-size: 1.25rem; }
+  .tag {
+    font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    color: #fff; padding: 3px 9px; border-radius: 20px;
+  }
+  .tag.film  { background: var(--film); }
+  .tag.serie { background: var(--serie); }
+  .tag.livre { background: var(--livre); }
+  .entry .saison { font-size: .82rem; color: var(--muted); font-weight: 500; }
+  .entry .stars { margin: 6px 0; font-size: 1.05rem; }
+  .entry .date  { color: var(--muted); font-size: .85rem; }
+  .entry .avis  { margin: 8px 0 0; color: var(--text2); }
+  .del {
+    position: absolute; top: 14px; right: 14px; background: none; border: none;
+    cursor: pointer; color: var(--line); font-size: 1.1rem; padding: 4px;
+  }
+  .del:hover { color: var(--film); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty .big { font-size: 2.5rem; margin-bottom: 8px; }
+
+  /* Bouton crayon (modifier) sur chaque entrée */
+  .edit {
+    position: absolute; top: 14px; right: 40px; background: none; border: none;
+    cursor: pointer; color: var(--line); font-size: 1rem; padding: 4px;
+  }
+  .edit:hover { color: var(--accent); }
+
+  /* Fenêtre de modification */
+  .modal-bg {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(34,39,31,.45); padding: 40px 16px;
+    align-items: flex-start; justify-content: center; overflow-y: auto;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 26px; width: 100%; max-width: 420px; position: relative;
+  }
+  .modal h2 {
+    font-family: "Instrument Serif", serif; font-weight: 600; font-size: 1.3rem; margin: 0 32px 4px 0;
+  }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px; background: none; border: none;
+    font-size: 1.2rem; cursor: pointer; color: var(--muted);
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Mon Carnet</h1>
+      <p>Ce que j'ai vu, regardé et lu — noté et daté.</p>
+    </div>
+    <button id="themeBtn" class="theme-btn" title="Basculer clair / sombre" aria-label="Basculer le thème">☾</button>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="layout">
+
+    <div class="panel">
+      <h2>Nouvelle entrée</h2>
+
+      <label for="type">Type</label>
+      <select id="type">
+        <option value="film">Film</option>
+        <option value="serie">Série</option>
+        <option value="livre">Livre</option>
+      </select>
+
+      <label for="titre">Rechercher un titre</label>
+      <div class="search-box">
+        <input type="text" id="titre" placeholder="Commence à taper…" autocomplete="off">
+        <div class="results" id="results"></div>
+      </div>
+
+      <div class="chosen" id="chosen">
+        <img id="chosenImg" alt="">
+        <div>
+          <div class="c-title" id="chosenTitle"></div>
+          <div class="c-sub" id="chosenSub"></div>
+        </div>
+        <button class="c-clear" id="chosenClear" title="Changer">✕</button>
+      </div>
+
+      <!-- Ce bloc n'apparaît que pour les séries (géré par majSaisonRow). -->
+      <div id="saisonRow" style="display:none">
+        <label for="saison">Saison</label>
+        <select id="saisonSelect" style="display:none"></select>
+        <input type="text" id="saison" inputmode="numeric" placeholder="Ex : 2" autocomplete="off">
+      </div>
+
+      <label>Note</label>
+      <div class="stars-input" id="starsInput"></div>
+
+      <label for="avis">Avis (facultatif)</label>
+      <textarea id="avis" placeholder="Ce que tu en as pensé…"></textarea>
+
+      <label for="date">Terminé le</label>
+      <input type="date" id="date">
+
+      <button class="btn" id="ajouterBtn">Ajouter au carnet</button>
+    </div>
+
+    <div>
+      <div class="tabs">
+        <button class="tab active" id="tabJournal">Journal</button>
+        <button class="tab" id="tabStats">Statistiques</button>
+        <span class="tab-actions">
+          <button class="tab-btn" id="importBtn" title="Restaurer une sauvegarde">⬆ Importer</button>
+          <button class="tab-btn" id="exportBtn" title="Télécharger une sauvegarde">⬇ Exporter</button>
+        </span>
+        <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+      </div>
+
+      <div id="vueJournal">
+        <div class="controls">
+          <input type="text" id="q" class="ctrl-search" placeholder="Rechercher dans mes entrées…" autocomplete="off">
+          <div class="controls-row">
+            <div class="type-pills" id="typePills">
+              <button class="tp active" data-type="tous">Tous</button>
+              <button class="tp" data-type="film">Films</button>
+              <button class="tp" data-type="serie">Séries</button>
+              <button class="tp" data-type="livre">Livres</button>
+            </div>
+            <button id="favFilter" class="fav-toggle" title="Afficher seulement les favoris">♡ Favoris</button>
+          </div>
+          <div class="controls-row2">
+            <select id="filtreGenre" class="ctrl-mini" style="display:none"></select>
+            <select id="tri" class="ctrl-mini">
+              <option value="date_desc">Terminé — récent</option>
+              <option value="date_asc">Terminé — ancien</option>
+              <option value="note_desc">Note — haute</option>
+              <option value="note_asc">Note — basse</option>
+              <option value="titre">Titre A→Z</option>
+            </select>
+            <button id="enrichBtn" class="ctrl-mini btn-mini" style="display:none" title="Récupérer les genres des entrées existantes">Récupérer les genres</button>
+          </div>
+        </div>
+        <div id="journal"></div>
+      </div>
+
+      <div id="vueStats" style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Fenêtre de modification d'une entrée -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="modal-close" id="modalClose" title="Fermer">✕</button>
+    <h2 id="editTitre">Modifier</h2>
+
+    <label>Note</label>
+    <div class="stars-input" id="starsEdit"></div>
+
+    <div id="saisonRowEdit" style="display:none">
+      <label for="saisonEdit">Saison (laisse vide pour toute la série)</label>
+      <input type="text" id="saisonEdit" inputmode="numeric" placeholder="Ex : 2" autocomplete="off">
+    </div>
+
+    <label for="avisEdit">Avis</label>
+    <textarea id="avisEdit" placeholder="Ce que tu en as pensé…"></textarea>
+
+    <label for="dateEdit">Terminé le</label>
+    <input type="date" id="dateEdit">
+
+    <button class="btn" id="enregistrerEdit">Enregistrer</button>
+  </div>
+</div>
+
+<!-- Fiche détaillée d'une œuvre -->
+<div class="modal-bg" id="detailBg">
+  <div class="modal modal-detail">
+    <button class="modal-close" id="detailClose" title="Fermer">✕</button>
+    <div class="detail-head">
+      <img id="detailPoster" class="detail-poster" alt="">
+      <div class="detail-meta">
+        <h2 id="detailTitre"></h2>
+        <div id="detailSousTitre" class="detail-sub"></div>
+        <div id="detailStars" class="detail-stars"></div>
+        <div id="detailInfos"></div>
+      </div>
+    </div>
+    <div id="detailAvis" class="detail-avis"></div>
+    <div class="detail-section"><h3>Synopsis</h3><p id="detailSynopsis"></p></div>
+    <div class="detail-actions">
+      <button class="btn-ghost" id="detailEdit">Modifier</button>
+      <button class="btn-ghost danger" id="detailDelete">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =============================================================
+   CONFIGURATION — les deux valeurs de connexion à ta base.
+   L'URL est déjà remplie. Colle ta clé "publishable" entre les
+   guillemets de SUPABASE_KEY (elle commence par sb_publishable_).
+   Ces deux valeurs sont faites pour vivre dans le code du navigateur.
+   ============================================================= */
+const SUPABASE_URL = "https://pyswfjgptkdljstjtrtk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_v9VKqpjF771p5FnXFM-vtg_8u7uXGtJ";
+
+// Ta clé TMDB (films & séries). Les livres n'en ont pas besoin.
+const CLE_TMDB = "1e80173159e2ba2f1ec3e1436111397c";
+/* ============================================================= */
+
+// On crée le "client" Supabase : l'objet par lequel on parle à la base.
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let entrees = [];       // rempli depuis Supabase au démarrage
+let noteChoisie = 0;
+let selection = null;   // l'œuvre choisie dans les résultats de recherche
+
+// État des contrôles du journal.
+let filtreType = "tous";
+let tri = "date_desc";
+let recherche = "";
+let favorisOnly = false;   // n'afficher que les favoris
+let filtreGenre = "";      // filtrer sur un genre précis
+
+// État de la fenêtre de modification.
+let editId = null;
+let noteEdit = 0;
+
+// Année affichée dans la rétrospective (null = année la plus récente).
+let wrappedAnnee = null;
+// Support choisi dans le bloc "Répartition des genres".
+let genreSupport = "tous";
+
+// Pourcentage de remplissage de l'étoile numéro i (1 à 5) pour une note donnée.
+// Ex : note 2.5 -> étoiles 1 et 2 pleines (100 %), étoile 3 à moitié (50 %).
+function fillPct(note, i) {
+  const n = Number(note);
+  if (n >= i) return 100;
+  if (n >= i - 0.5) return 50;
+  return 0;
+}
+
+// Étoiles en lecture seule, pour le journal (demi-étoiles comprises).
+function etoilesHTML(note) {
+  let html = '<span class="rating">';
+  for (let i = 1; i <= 5; i++) {
+    html += '<span class="st"><span class="fill" style="width:' + fillPct(note, i) + '%"></span></span>';
+  }
+  return html + '</span>';
+}
+
+// Met à jour le remplissage des étoiles d'un conteneur donné.
+function renderStars(containerId, v) {
+  document.querySelectorAll("#" + containerId + " .st").forEach((st, idx) => {
+    st.querySelector(".fill").style.width = fillPct(v, idx + 1) + "%";
+  });
+}
+
+/* ---------- Étoiles cliquables réutilisables (demi-étoiles) ----------
+   getVal renvoie la note courante, setVal l'enregistre. On s'en sert
+   pour le formulaire d'ajout ET pour la fenêtre de modification. */
+function construireEtoiles(containerId, getVal, setVal) {
+  const zone = document.getElementById(containerId);
+  zone.innerHTML = "";
+  for (let i = 1; i <= 5; i++) {
+    const st = document.createElement("span");
+    st.className = "st";
+    st.innerHTML = '<span class="fill"></span>';
+    // Chaque étoile a deux demi-zones cliquables : gauche = i-0.5, droite = i.
+    const gauche = document.createElement("span"); gauche.className = "half left";
+    const droite = document.createElement("span"); droite.className = "half right";
+    gauche.addEventListener("click", () => { setVal(i - 0.5); renderStars(containerId, getVal()); });
+    droite.addEventListener("click", () => { setVal(i);       renderStars(containerId, getVal()); });
+    gauche.addEventListener("mouseenter", () => renderStars(containerId, i - 0.5));
+    droite.addEventListener("mouseenter", () => renderStars(containerId, i));
+    st.append(gauche, droite);
+    zone.appendChild(st);
+  }
+  zone.onmouseleave = () => renderStars(containerId, getVal());
+  renderStars(containerId, getVal());
+}
+
+// Étoiles du formulaire d'ajout (branchées sur noteChoisie).
+function construireEtoilesFormulaire() {
+  construireEtoiles("starsInput", () => noteChoisie, v => { noteChoisie = v; });
+}
+
+/* =============================================================
+   BASE DE DONNÉES (Supabase)
+   Chaque opération est un appel réseau : d'où async/await.
+   ============================================================= */
+
+// Charge toutes les entrées depuis la table "entrees".
+async function charger() {
+  const journal = document.getElementById("journal");
+
+  // Garde-fou : tant que la clé n'est pas collée, on explique quoi faire.
+  if (SUPABASE_KEY.startsWith("COLLE")) {
+    journal.innerHTML = '<div class="empty"><div class="big">🔑</div>'
+      + '<p>Colle ta clé publishable Supabase dans le code<br>'
+      + '(ligne <code>SUPABASE_KEY</code>) pour connecter la base.</p></div>';
+    return;
+  }
+
+  const { data, error } = await db
+    .from("entrees")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    journal.innerHTML = '<div class="empty"><p>Impossible de charger : '
+      + echapper(error.message) + '</p></div>';
+    return;
+  }
+  entrees = data || [];
+  afficher();
+}
+
+// Ajoute une entrée dans la base, puis recharge la liste.
+async function ajouter() {
+  const type = document.getElementById("type").value;
+  const avis = document.getElementById("avis").value.trim();
+  const date = document.getElementById("date").value;
+  const sel = document.getElementById("saisonSelect");
+  const saisonVal = (type === "serie")
+    ? (sel.style.display !== "none" ? sel.value : document.getElementById("saison").value.trim())
+    : "";
+
+  if (!selection) { alert("Choisis une œuvre dans les résultats de recherche."); return; }
+  if (noteChoisie === 0) { alert("Choisis une note."); return; }
+
+  const bouton = document.getElementById("ajouterBtn");
+  bouton.disabled = true;                       // évite le double-clic pendant l'envoi
+
+  const genres = await genresPour(type, selection);   // récupère les genres pour ce titre
+
+  const { error } = await db.from("entrees").insert({
+    titre:    selection.titre,
+    type:     type,
+    note:     noteChoisie,
+    avis:     avis,
+    date_fin: date || null,
+    poster:   selection.poster || "",
+    annee:    selection.annee || "",
+    // La saison n'a de sens que pour une série ; sinon on met null.
+    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null,
+    genres:   genres
+  });
+
+  bouton.disabled = false;
+  if (error) { alert("Erreur à l'enregistrement : " + error.message); return; }
+
+  reinitialiserFormulaire();
+  await charger();
+}
+
+// Supprime une entrée d'après son id, puis recharge.
+async function supprimer(id) {
+  const { error } = await db.from("entrees").delete().eq("id", id);
+  if (error) { alert("Erreur à la suppression : " + error.message); return; }
+  await charger();
+}
+
+/* ---------- Modification d'une entrée ---------- */
+
+// Ouvre la fenêtre pré-remplie avec les valeurs de l'entrée choisie.
+function ouvrirEdition(id) {
+  const e = entrees.find(x => x.id === id);
+  if (!e) return;
+  editId = id;
+  noteEdit = Number(e.note);
+  document.getElementById("editTitre").textContent = e.titre;
+  construireEtoiles("starsEdit", () => noteEdit, v => { noteEdit = v; });
+  document.getElementById("avisEdit").value = e.avis || "";
+  document.getElementById("dateEdit").value = e.date_fin || "";
+
+  const rowS = document.getElementById("saisonRowEdit");
+  if (e.type === "serie") {
+    rowS.style.display = "block";
+    document.getElementById("saisonEdit").value = e.saison || "";
+  } else {
+    rowS.style.display = "none";
+    document.getElementById("saisonEdit").value = "";
+  }
+  document.getElementById("modalBg").classList.add("open");
+}
+
+function fermerEdition() {
+  document.getElementById("modalBg").classList.remove("open");
+  editId = null;
+}
+
+// Enregistre les changements dans Supabase (update), puis recharge.
+async function enregistrerEdition() {
+  if (editId == null) return;
+  if (noteEdit === 0) { alert("Choisis une note."); return; }
+
+  const e = entrees.find(x => x.id === editId);
+  const type = e ? e.type : null;
+  const avis = document.getElementById("avisEdit").value.trim();
+  const date = document.getElementById("dateEdit").value;
+  const saisonVal = document.getElementById("saisonEdit").value.trim();
+
+  const btn = document.getElementById("enregistrerEdit");
+  btn.disabled = true;
+  const { error } = await db.from("entrees").update({
+    note:     noteEdit,
+    avis:     avis,
+    date_fin: date || null,
+    saison:   (type === "serie" && saisonVal) ? Number(saisonVal) : null
+  }).eq("id", editId);
+  btn.disabled = false;
+
+  if (error) { alert("Erreur à la modification : " + error.message); return; }
+  fermerEdition();
+  await charger();
+}
+
+function reinitialiserFormulaire() {
+  document.getElementById("avis").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("saison").value = "";
+  document.getElementById("type").value = "film";
+  noteChoisie = 0;
+  majSaisonRow();          // le type repasse à "film" → on masque la saison
+  effacerSelection();
+  construireEtoilesFormulaire();
+}
+
+/* ---------- Favori ---------- */
+
+// Bascule l'état favori d'une entrée.
+async function basculerFavori(id) {
+  const e = entrees.find(x => x.id === id);
+  if (!e) return;
+  const { error } = await db.from("entrees").update({ favori: !e.favori }).eq("id", id);
+  if (error) { alert("Erreur : " + error.message); return; }
+  await charger();
+}
+
+/* ---------- Fiche détaillée ----------
+   On affiche d'abord ce qu'on a déjà (affiche, note, avis), puis on va
+   chercher le synopsis, le réalisateur/auteur et les genres via TMDB
+   ou Open Library, qu'on remplit quand la réponse arrive. */
+
+const TYPE_LABEL = { film: "Film", serie: "Série", livre: "Livre" };
+let detailId = null;
+
+async function ouvrirDetail(id) {
+  const e = entrees.find(x => x.id === id);
+  if (!e) return;
+  detailId = id;
+
+  const poster = document.getElementById("detailPoster");
+  if (e.poster) { poster.src = e.poster; poster.style.display = "block"; }
+  else { poster.removeAttribute("src"); poster.style.display = "none"; }
+
+  document.getElementById("detailTitre").textContent = e.titre;
+  document.getElementById("detailSousTitre").textContent =
+    [e.annee, TYPE_LABEL[e.type], (e.type === "serie" && e.saison) ? "Saison " + e.saison : null]
+      .filter(Boolean).join(" · ");
+  document.getElementById("detailStars").innerHTML = etoilesHTML(e.note);
+  document.getElementById("detailAvis").innerHTML =
+    e.avis ? '<h3>Mon avis</h3><p>' + echapper(e.avis) + '</p>' : "";
+  document.getElementById("detailInfos").innerHTML = "";
+  document.getElementById("detailSynopsis").textContent = "Chargement…";
+  document.getElementById("detailBg").classList.add("open");
+
+  try {
+    const info = await chargerDetails(e);
+    if (!info) { document.getElementById("detailSynopsis").textContent = "Aucun détail trouvé."; return; }
+    document.getElementById("detailSynopsis").textContent = info.synopsis || "Pas de synopsis disponible.";
+    let h = "";
+    if (info.ligne) h += '<div class="detail-line">' + echapper(info.ligne) + '</div>';
+    if (info.genres && info.genres.length) {
+      h += '<div class="detail-genres">'
+        + info.genres.map(g => '<span class="genre">' + echapper(g) + '</span>').join("")
+        + '</div>';
+    }
+    document.getElementById("detailInfos").innerHTML = h;
+  } catch (err) {
+    document.getElementById("detailSynopsis").textContent = "Détails indisponibles pour le moment.";
+  }
+}
+
+function fermerDetail() { document.getElementById("detailBg").classList.remove("open"); }
+
+// Route vers la bonne source selon le type.
+async function chargerDetails(e) {
+  if (e.type === "livre") return await detailsLivre(e);
+  return await detailsTMDB(e, e.type === "serie" ? "tv" : "movie");
+}
+
+async function detailsTMDB(e, kind) {
+  const anneeParam = e.annee
+    ? "&" + (kind === "movie" ? "year" : "first_air_date_year") + "=" + e.annee : "";
+  const rech = "https://api.themoviedb.org/3/search/" + kind + "?api_key=" + CLE_TMDB
+    + "&language=fr-FR&query=" + encodeURIComponent(e.titre) + anneeParam;
+  const r1 = await fetch(rech);
+  if (!r1.ok) throw new Error("TMDB " + r1.status);
+  const trouve = ((await r1.json()).results || [])[0];
+  if (!trouve) return null;
+
+  const det = "https://api.themoviedb.org/3/" + kind + "/" + trouve.id + "?api_key=" + CLE_TMDB
+    + "&language=fr-FR&append_to_response=credits";
+  const r2 = await fetch(det);
+  if (!r2.ok) throw new Error("TMDB " + r2.status);
+  const d = await r2.json();
+
+  const genres = (d.genres || []).map(g => g.name);
+  let ligne = "";
+  if (kind === "movie") {
+    const real = ((d.credits && d.credits.crew) || []).filter(c => c.job === "Director").map(c => c.name);
+    if (real.length) ligne = "Réalisation : " + real.join(", ");
+  } else {
+    const cr = (d.created_by || []).map(c => c.name);
+    if (cr.length) ligne = "Création : " + cr.join(", ");
+  }
+  return { synopsis: d.overview || "", ligne, genres };
+}
+
+async function detailsLivre(e) {
+  const url = "https://openlibrary.org/search.json?limit=1"
+    + "&fields=key,author_name,first_publish_year,subject&title=" + encodeURIComponent(e.titre);
+  const r1 = await fetch(url);
+  if (!r1.ok) throw new Error("Open Library " + r1.status);
+  const doc = ((await r1.json()).docs || [])[0];
+  if (!doc) return null;
+
+  let synopsis = "";
+  if (doc.key) {
+    try {
+      const r2 = await fetch("https://openlibrary.org" + doc.key + ".json");
+      if (r2.ok) {
+        const w = await r2.json();
+        synopsis = typeof w.description === "string" ? w.description
+                 : (w.description && w.description.value) ? w.description.value : "";
+      }
+    } catch (_) { /* description facultative */ }
+  }
+  const ligne = doc.author_name ? "Auteur : " + doc.author_name.slice(0, 2).join(", ") : "";
+  const genres = (doc.subject || []).slice(0, 4);
+  return { synopsis, ligne, genres };
+}
+
+/* ---------- Genres ---------- */
+
+// Récupère les genres d'une œuvre. Pour films/séries on utilise l'id TMDB
+// (précis) ; pour les livres on repasse par la recherche Open Library.
+async function genresPour(type, item) {
+  try {
+    if (type === "livre") {
+      const info = await detailsLivre({ titre: item.titre });
+      return info ? info.genres : [];
+    }
+    const kind = type === "serie" ? "tv" : "movie";
+    if (item.id) {
+      const r = await fetch("https://api.themoviedb.org/3/" + kind + "/" + item.id
+        + "?api_key=" + CLE_TMDB + "&language=fr-FR");
+      if (r.ok) return ((await r.json()).genres || []).map(g => g.name);
+    }
+    return [];
+  } catch (_) { return []; }
+}
+
+// Récupère les genres de toutes les entrées qui n'en ont pas encore.
+async function enrichirGenres() {
+  const aFaire = entrees.filter(e => !e.genres || e.genres.length === 0);
+  if (aFaire.length === 0) { alert("Toutes tes entrées ont déjà leurs genres."); return; }
+
+  const btn = document.getElementById("enrichBtn");
+  const libelle = btn.textContent;
+  btn.disabled = true;
+  let ok = 0;
+  for (let i = 0; i < aFaire.length; i++) {
+    const e = aFaire[i];
+    btn.textContent = "Genres… " + (i + 1) + "/" + aFaire.length;
+    try {
+      const info = await chargerDetails(e);        // recherche par titre (+ année)
+      const g = (info && info.genres) ? info.genres : [];
+      if (g.length) { await db.from("entrees").update({ genres: g }).eq("id", e.id); ok++; }
+    } catch (_) { /* on ignore les échecs ponctuels */ }
+  }
+  btn.textContent = libelle;
+  btn.disabled = false;
+  await charger();
+  alert(ok + " entrée(s) enrichie(s) en genres.");
+}
+
+// Remplit le menu de genres et affiche/masque les contrôles selon les données.
+function majControlesGenre() {
+  const sel = document.getElementById("filtreGenre");
+  const genres = [...new Set(entrees.flatMap(e => e.genres || []))]
+    .sort((a, b) => a.localeCompare(b, "fr"));
+
+  // (Re)construction du menu via le DOM (pas de souci d'échappement).
+  sel.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = ""; opt0.textContent = "Tous les genres";
+  sel.appendChild(opt0);
+  genres.forEach(g => {
+    const o = document.createElement("option");
+    o.value = g; o.textContent = g;
+    sel.appendChild(o);
+  });
+  // On conserve la sélection courante si elle existe encore.
+  if (genres.includes(filtreGenre)) sel.value = filtreGenre;
+  else { filtreGenre = ""; sel.value = ""; }
+  sel.style.display = genres.length ? "block" : "none";
+
+  // Le bouton d'enrichissement n'apparaît que s'il reste des entrées sans genre.
+  const manquants = entrees.some(e => !e.genres || e.genres.length === 0);
+  document.getElementById("enrichBtn").style.display = manquants ? "block" : "none";
+}
+
+// La ligne Saison n'apparaît qu'une fois une série sélectionnée (via choisir).
+function majSaisonRow() {
+  resetSaisonUI();
+}
+
+/* =============================================================
+   RECHERCHE DE TITRES (TMDB + Open Library)
+   ============================================================= */
+
+async function chercherTMDB(query, kind) {
+  const url = "https://api.themoviedb.org/3/search/" + kind
+            + "?api_key=" + CLE_TMDB
+            + "&language=fr-FR&query=" + encodeURIComponent(query);
+  const rep = await fetch(url);
+  if (!rep.ok) throw new Error("TMDB a répondu " + rep.status);
+  const data = await rep.json();
+  return (data.results || []).slice(0, 6).map(r => ({
+    id:     r.id,
+    titre:  r.title || r.name,
+    annee:  (r.release_date || r.first_air_date || "").slice(0, 4),
+    poster: r.poster_path ? "https://image.tmdb.org/t/p/w154" + r.poster_path : "",
+    sous:   ""
+  }));
+}
+
+async function chercherOpenLibrary(query) {
+  const url = "https://openlibrary.org/search.json?limit=6"
+            + "&fields=title,author_name,first_publish_year,cover_i&title="
+            + encodeURIComponent(query);
+  const rep = await fetch(url);
+  if (!rep.ok) throw new Error("Open Library a répondu " + rep.status);
+  const data = await rep.json();
+  return (data.docs || []).slice(0, 6).map(d => ({
+    titre:  d.title,
+    annee:  d.first_publish_year ? String(d.first_publish_year) : "",
+    poster: d.cover_i ? "https://covers.openlibrary.org/b/id/" + d.cover_i + "-M.jpg" : "",
+    sous:   d.author_name ? d.author_name[0] : ""
+  }));
+}
+
+async function rechercher() {
+  const query = document.getElementById("titre").value.trim();
+  const type  = document.getElementById("type").value;
+  const zone  = document.getElementById("results");
+
+  if (query.length < 2) { zone.innerHTML = ""; return; }
+
+  if ((type === "film" || type === "serie") && CLE_TMDB === "") {
+    zone.innerHTML = '<div class="hint">Ajoute ta clé TMDB dans le code pour '
+                   + 'chercher films et séries. Les livres marchent déjà.</div>';
+    return;
+  }
+
+  zone.innerHTML = '<div class="hint">Recherche…</div>';
+  try {
+    let liste;
+    if (type === "film")  liste = await chercherTMDB(query, "movie");
+    else if (type === "serie") liste = await chercherTMDB(query, "tv");
+    else liste = await chercherOpenLibrary(query);
+    afficherResultats(liste);
+  } catch (err) {
+    zone.innerHTML = '<div class="hint">Souci : ' + echapper(err.message) + '</div>';
+  }
+}
+
+function afficherResultats(liste) {
+  const zone = document.getElementById("results");
+  if (liste.length === 0) { zone.innerHTML = '<div class="hint">Aucun résultat.</div>'; return; }
+  zone.innerHTML = "";
+  for (const item of liste) {
+    const div = document.createElement("div");
+    div.className = "result";
+    const sousTexte = [item.annee, item.sous].filter(Boolean).join(" · ");
+    div.innerHTML =
+      (item.poster ? '<img src="' + item.poster + '" alt="">' : '<img alt="">')
+      + '<div><div class="r-title">' + echapper(item.titre) + '</div>'
+      + '<div class="r-sub">' + echapper(sousTexte) + '</div></div>';
+    div.addEventListener("click", () => choisir(item));
+    zone.appendChild(div);
+  }
+}
+
+function choisir(item) {
+  selection = item;
+  document.getElementById("titre").value = item.titre;
+  document.getElementById("results").innerHTML = "";
+  const chip = document.getElementById("chosen");
+  chip.style.display = "flex";
+  document.getElementById("chosenImg").src = item.poster || "";
+  document.getElementById("chosenTitle").textContent = item.titre;
+  document.getElementById("chosenSub").textContent =
+    [item.annee, item.sous].filter(Boolean).join(" · ");
+  // Pour une série, on tente de proposer ses saisons automatiquement.
+  if (document.getElementById("type").value === "serie" && item.id) chargerSaisons(item.id);
+  else resetSaisonUI();
+}
+
+// Masque la ligne Saison (menu et champ manuel) : état par défaut.
+function resetSaisonUI() {
+  const sel = document.getElementById("saisonSelect");
+  const inp = document.getElementById("saison");
+  document.getElementById("saisonRow").style.display = "none";
+  sel.style.display = "none"; sel.innerHTML = "";
+  inp.style.display = "block"; inp.value = "";
+}
+
+// Récupère les saisons d'une série sur TMDB et remplit le menu déroulant.
+async function chargerSaisons(tvId) {
+  const row = document.getElementById("saisonRow");
+  const sel = document.getElementById("saisonSelect");
+  const inp = document.getElementById("saison");
+  try {
+    const r = await fetch("https://api.themoviedb.org/3/tv/" + tvId + "?api_key=" + CLE_TMDB + "&language=fr-FR");
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    const saisons = (d.seasons || []).filter(s => s.season_number >= 1);   // on saute les "Spéciaux"
+    if (!saisons.length) throw 0;
+    sel.innerHTML = '<option value="">Toute la série</option>'
+      + saisons.map(s => {
+          const nom = (s.name && !/^saison/i.test(s.name)) ? " — " + s.name : "";
+          return '<option value="' + s.season_number + '">Saison ' + s.season_number + nom + '</option>';
+        }).join("");
+    sel.style.display = "block"; inp.style.display = "none";
+    row.style.display = "block";
+  } catch (_) {
+    // Repli : on montre la saisie manuelle de la saison.
+    sel.style.display = "none"; sel.innerHTML = "";
+    inp.style.display = "block"; inp.value = "";
+    row.style.display = "block";
+  }
+}
+
+function effacerSelection() {
+  selection = null;
+  document.getElementById("chosen").style.display = "none";
+  document.getElementById("titre").value = "";
+  document.getElementById("results").innerHTML = "";
+  resetSaisonUI();
+}
+
+/* =============================================================
+   AFFICHAGE
+   ============================================================= */
+
+function moisLisible(dateStr) {
+  if (!dateStr) return "Sans date";
+  return new Date(dateStr).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+}
+
+function afficher() {
+  afficherStats();
+  majControlesGenre();
+  afficherJournal();
+  // Si la vue Statistiques est ouverte, on la recalcule aussi.
+  const vs = document.getElementById("vueStats");
+  if (vs && vs.style.display === "block") afficherStatsPage();
+}
+
+function afficherStats() {
+  const zone = document.getElementById("stats");
+  const total = entrees.length;
+  const nb = t => entrees.filter(e => e.type === t).length;
+  const f = nb("film"), s = nb("serie"), l = nb("livre");
+
+  // Barre de répartition : une portion colorée par type, proportionnelle.
+  const pct = n => total ? (n / total * 100) : 0;
+  const dist = total === 0 ? "" :
+      '<div class="dist">'
+    + (f ? '<span style="width:' + pct(f) + '%;background:var(--film)"></span>'  : '')
+    + (s ? '<span style="width:' + pct(s) + '%;background:var(--serie)"></span>' : '')
+    + (l ? '<span style="width:' + pct(l) + '%;background:var(--livre)"></span>' : '')
+    + '</div>';
+
+  zone.innerHTML =
+      '<div class="stats-hero"><div class="num-big">' + total + '</div>'
+    + '<div class="lbl">entrées</div></div>'
+    + '<div class="stats-sep"></div>'
+    + '<div class="stats-types"><div class="type-row">'
+    +   '<span class="type-stat"><span class="dot film"></span><b>'  + f + '</b> films</span>'
+    +   '<span class="type-stat"><span class="dot serie"></span><b>' + s + '</b> séries</span>'
+    +   '<span class="type-stat"><span class="dot livre"></span><b>' + l + '</b> livres</span>'
+    + '</div>' + dist + '</div>';
+}
+
+// Renvoie une fonction de comparaison selon le tri choisi.
+function comparateur(mode) {
+  const parDate = (a, b, sens) => {
+    if (!a.date_fin) return 1;          // les sans-date toujours en dernier
+    if (!b.date_fin) return -1;
+    return sens * a.date_fin.localeCompare(b.date_fin);
+  };
+  if (mode === "date_desc") return (a, b) => parDate(a, b, -1);
+  if (mode === "date_asc")  return (a, b) => parDate(a, b, 1);
+  if (mode === "note_desc") return (a, b) => Number(b.note) - Number(a.note);
+  if (mode === "note_asc")  return (a, b) => Number(a.note) - Number(b.note);
+  if (mode === "titre")     return (a, b) => (a.titre || "").localeCompare(b.titre || "", "fr");
+  return () => 0;
+}
+
+function afficherJournal() {
+  const zone = document.getElementById("journal");
+
+  if (entrees.length === 0) {
+    zone.innerHTML = '<div class="empty"><div class="big">✷</div>'
+      + '<p>Ton carnet est vide.<br>Cherche ta première œuvre à gauche.</p></div>';
+    return;
+  }
+
+  // 1) On part de toutes les entrées, puis on filtre et on trie.
+  let liste = entrees.slice();
+  if (filtreType !== "tous") liste = liste.filter(e => e.type === filtreType);
+  if (favorisOnly) liste = liste.filter(e => e.favori);
+  if (filtreGenre) liste = liste.filter(e => (e.genres || []).includes(filtreGenre));
+  if (recherche) {
+    const r = recherche.toLowerCase();
+    liste = liste.filter(e => (e.titre || "").toLowerCase().includes(r));
+  }
+  liste.sort(comparateur(tri));
+
+  // Aucun résultat pour les filtres en cours (mais le carnet n'est pas vide).
+  if (liste.length === 0) {
+    zone.innerHTML = '<div class="empty"><div class="big">∅</div>'
+      + '<p>Aucune entrée ne correspond à ces filtres.</p></div>';
+    return;
+  }
+
+  // 2) On regroupe par mois uniquement quand on trie par date.
+  const grouperParMois = (tri === "date_desc" || tri === "date_asc");
+  const label = { film: "Film", serie: "Série", livre: "Livre" };
+
+  let html = "";
+  let moisCourant = "";
+  for (const e of liste) {
+    if (grouperParMois) {
+      const mois = moisLisible(e.date_fin);
+      if (mois !== moisCourant) { html += '<div class="month-sep">' + mois + '</div>'; moisCourant = mois; }
+    }
+    const note = String(Number(e.note)).replace(".", ",");
+    const meta = [label[e.type], (e.type === "serie" && e.saison) ? "S" + e.saison : null, e.annee]
+      .filter(Boolean).join(" · ");
+    html +=
+      '<div class="tile">'
+    + '<div class="poster-wrap">'
+    +   (e.poster
+          ? '<img class="poster" src="' + e.poster + '" alt="" onclick="ouvrirDetail(' + e.id + ')">'
+          : '<div class="poster ph ph-' + e.type + '" onclick="ouvrirDetail(' + e.id + ')">'
+            + echapper((e.titre || "?").charAt(0).toUpperCase()) + '</div>')
+    +   '<button class="tile-fav' + (e.favori ? ' on' : '') + '" title="Favori"'
+    +     ' onclick="event.stopPropagation(); basculerFavori(' + e.id + ')">' + (e.favori ? '♥' : '♡') + '</button>'
+    +   '<div class="tile-score">' + note + '</div>'
+    + '</div>'
+    + '<div class="tile-title" onclick="ouvrirDetail(' + e.id + ')">' + echapper(e.titre) + '</div>'
+    + '<div class="tile-meta"><span class="dot" style="background:var(--' + e.type + ')"></span>' + echapper(meta) + '</div>'
+    + '</div>';
+  }
+  zone.innerHTML = '<div class="gallery">' + html + '</div>';
+}
+
+function echapper(txt) {
+  const d = document.createElement("div");
+  d.textContent = txt == null ? "" : txt;
+  return d.innerHTML;
+}
+
+/* =============================================================
+   STATISTIQUES, EXPORT ET BASCULE DE VUE
+   ============================================================= */
+
+// Une ligne de mini-graphique : libellé, barre proportionnelle, valeur.
+function barRow(label, val, max, color) {
+  const pct = max ? (val / max * 100) : 0;
+  const style = 'width:' + pct + '%' + (color ? ';background:' + color : '');
+  return '<div class="bar-row"><span class="bar-label">' + echapper(label) + '</span>'
+    + '<span class="bar-track"><span class="bar-fill" style="' + style + '"></span></span>'
+    + '<span class="bar-val">' + val + '</span></div>';
+}
+
+// Construit la page de statistiques à partir de toutes les entrées.
+function afficherStatsPage() {
+  const zone = document.getElementById("vueStats");
+  const n = entrees.length;
+  if (n === 0) {
+    zone.innerHTML = '<div class="empty"><p>Pas encore de données à analyser.</p></div>';
+    return;
+  }
+
+  const moyenne = (entrees.reduce((s, e) => s + Number(e.note), 0) / n).toFixed(2);
+
+  // Œuvres par année (d'après la date de fin).
+  const parAnnee = {};
+  entrees.forEach(e => { if (e.date_fin) { const y = e.date_fin.slice(0, 4); parAnnee[y] = (parAnnee[y] || 0) + 1; } });
+  const annees = Object.keys(parAnnee).sort();
+  const maxAnnee = Math.max(1, ...annees.map(y => parAnnee[y]));
+  const distAnnees = annees.length
+    ? annees.map(y => barRow(y, parAnnee[y], maxAnnee, "var(--serie)")).join("")
+    : '<p class="muted-note">Aucune date renseignée pour l\'instant.</p>';
+
+  // Mois le plus actif.
+  const parMois = {};
+  entrees.forEach(e => { if (e.date_fin) { const m = e.date_fin.slice(0, 7); parMois[m] = (parMois[m] || 0) + 1; } });
+  const moisKeys = Object.keys(parMois);
+  let moisTop = "—";
+  if (moisKeys.length) {
+    const best = moisKeys.reduce((a, b) => (parMois[b] > parMois[a] ? b : a));
+    moisTop = moisLisible(best + "-01") + " — " + parMois[best] + " entrée" + (parMois[best] > 1 ? "s" : "");
+  }
+
+  // Mieux notées (top 5) : affiche + note en gros chiffre.
+  const top = [...entrees].sort((a, b) => Number(b.note) - Number(a.note)).slice(0, 5);
+  const topHtml = top.map(e =>
+    '<div class="top-item">'
+    + (e.poster
+        ? '<img class="top-poster" src="' + e.poster + '" alt="">'
+        : '<span class="top-poster ph ph-' + e.type + '">' + echapper((e.titre || "?").charAt(0).toUpperCase()) + '</span>')
+    + '<div class="top-body"><div class="top-title">' + echapper(e.titre)
+    +   ((e.type === "serie" && e.saison) ? " · S" + e.saison : "") + '</div></div>'
+    + '<span class="top-score">' + String(Number(e.note)).replace(".", ",") + '</span>'
+    + '</div>'
+  ).join("");
+
+  zone.innerHTML =
+      '<div class="stats-page">'
+    + wrappedHTML()
+    + '<div class="stat-card vue-hero"><div class="c1"></div><div class="c2"></div><div class="vue-body">'
+    +   '<h3>Vue d\'ensemble</h3>'
+    +   '<div class="vue-big">' + moyenne.replace(".", ",") + '</div>'
+    +   '<div class="vue-sub">note moyenne sur ' + n + ' entrées</div>'
+    +   '<div class="vue-sub">Mois le plus actif — ' + moisTop + '</div>'
+    + '</div></div>'
+    + genresBlockHTML()
+    + '<div class="stat-card card-serie"><h3>Œuvres par année</h3>' + distAnnees + '</div>'
+    + '<div class="stat-card mieux-hero"><div class="c1"></div><div class="c2"></div><div class="vue-body">'
+    +   '<h3>Mieux notées</h3><div class="top-list">' + topHtml + '</div></div></div>'
+    + heatmapHTML()
+    + '</div>';
+}
+
+// Change le support (film/série/livre) du bloc genres.
+function changerGenreSupport(s) { genreSupport = s; afficherStatsPage(); }
+
+// Bloc "Répartition des genres" : pastilles de support + barres classées.
+function genresBlockHTML() {
+  let list = entrees;
+  if (genreSupport !== "tous") list = entrees.filter(e => e.type === genreSupport);
+  const compte = {};
+  list.forEach(e => (e.genres || []).forEach(g => { compte[g] = (compte[g] || 0) + 1; }));
+  const genres = Object.keys(compte).sort((a, b) => compte[b] - compte[a]).slice(0, 8);
+  const max = Math.max(1, ...genres.map(g => compte[g]));
+
+  const supports = [["tous", "Tous"], ["film", "Films"], ["serie", "Séries"], ["livre", "Livres"]];
+  const pills = '<div class="type-pills">' + supports.map(([v, l]) =>
+    '<button class="tp' + (v === genreSupport ? " active" : "") + '" data-type="' + v + '"'
+    + ' onclick="changerGenreSupport(\'' + v + '\')">' + l + '</button>').join("") + '</div>';
+
+  const coul = genreSupport === "tous" ? "var(--accent)" : "var(--" + genreSupport + ")";
+
+  let bars;
+  if (genres.length === 0) {
+    bars = '<p class="muted-note">Aucun genre pour ce support. '
+      + 'Charge-les via « Récupérer les genres » dans le journal.</p>';
+  } else {
+    bars = genres.map((g) => {
+      const pct = compte[g] / max * 100;
+      return '<div class="gbar"><span class="gbar-lab" title="' + echapper(g) + '">' + echapper(g) + '</span>'
+        + '<span class="gbar-track"><span class="gbar-fill" style="width:' + pct + '%;background:' + coul + '"></span></span>'
+        + '<span class="gbar-val">' + compte[g] + '</span></div>';
+    }).join("");
+  }
+  return '<div class="stat-card card-film"><h3>Répartition des genres</h3>' + pills
+    + '<div style="margin-top:16px">' + bars + '</div></div>';
+}
+
+// Renvoie 'YYYY-MM-DD' pour une date locale (sans souci de fuseau horaire).
+function ymd(d) {
+  return d.getFullYear() + "-"
+    + String(d.getMonth() + 1).padStart(2, "0") + "-"
+    + String(d.getDate()).padStart(2, "0");
+}
+
+// Niveau de couleur (0 à 4) selon le nombre d'entrées un jour donné.
+function niveauJour(c) {
+  if (c <= 0) return 0;
+  if (c === 1) return 1;
+  if (c === 2) return 2;
+  if (c === 3) return 3;
+  return 4;
+}
+
+// Construit le calendrier d'activité (façon "contributions GitHub") sur ~1 an.
+function heatmapHTML() {
+  // Nombre d'entrées terminées par jour.
+  const parJour = {};
+  entrees.forEach(e => { if (e.date_fin) parJour[e.date_fin] = (parJour[e.date_fin] || 0) + 1; });
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const jourSem = (today.getDay() + 6) % 7;              // 0 = lundi … 6 = dimanche
+  const debut = new Date(today);
+  debut.setDate(debut.getDate() - (52 * 7) - jourSem);   // ~53 colonnes, commence un lundi
+
+  const moisNoms = ["janv.", "févr.", "mars", "avr.", "mai", "juin",
+                    "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  const cols = [];
+  const cur = new Date(debut);
+  let moisPrec = -1;
+  while (cur <= today) {
+    const col = { label: "", cells: [] };
+    if (cur.getMonth() !== moisPrec) { col.label = moisNoms[cur.getMonth()]; moisPrec = cur.getMonth(); }
+    for (let d = 0; d < 7; d++) {
+      const iso = ymd(cur);
+      col.cells.push({ iso, c: (cur <= today) ? (parJour[iso] || 0) : -1 });
+      cur.setDate(cur.getDate() + 1);
+    }
+    cols.push(col);
+  }
+
+  const labels = '<div class="hm-labels">'
+    + cols.map(col => '<span class="hm-lab">' + col.label + '</span>').join("") + '</div>';
+  const grid = '<div class="hm-grid">'
+    + cols.map(col => '<div class="hm-col">'
+        + col.cells.map(cell => cell.c < 0
+            ? '<span class="hm-cell hm-empty"></span>'
+            : '<span class="hm-cell hm-' + niveauJour(cell.c) + '" title="'
+              + cell.iso + ' — ' + cell.c + ' entrée' + (cell.c > 1 ? "s" : "") + '"></span>'
+          ).join("") + '</div>').join("") + '</div>';
+  const legende = '<div class="hm-legend">Moins '
+    + [0, 1, 2, 3, 4].map(l => '<span class="hm-cell hm-' + l + '"></span>').join("")
+    + ' Plus</div>';
+
+  return '<div class="stat-card card-livre card-full"><h3>Calendrier d\'activité</h3>'
+    + '<div class="hm-scroll">' + labels + grid + '</div>' + legende + '</div>';
+}
+
+// Calcule les chiffres d'une année (chaîne "AAAA") à partir des entrées.
+function statsAnnee(annee) {
+  const list = entrees.filter(e => e.date_fin && e.date_fin.slice(0, 4) === annee);
+  const n = list.length;
+  const nb = t => list.filter(e => e.type === t).length;
+  const moy = n ? list.reduce((s, e) => s + Number(e.note), 0) / n : 0;
+  const top = n ? [...list].sort((a, b) => Number(b.note) - Number(a.note))[0] : null;
+  const cinq = list.filter(e => Number(e.note) === 5).length;
+  const parMois = {};
+  list.forEach(e => { const m = e.date_fin.slice(0, 7); parMois[m] = (parMois[m] || 0) + 1; });
+  let moisTop = null, moisMax = 0;
+  Object.keys(parMois).forEach(m => { if (parMois[m] > moisMax) { moisMax = parMois[m]; moisTop = m; } });
+  return { n, films: nb("film"), series: nb("serie"), livres: nb("livre"), moy, top, cinq, moisTop, moisMax };
+}
+
+// Change l'année de la rétrospective et recalcule la page.
+function changerAnneeWrapped(a) { wrappedAnnee = a; afficherStatsPage(); }
+
+// Construit la carte "Wrapped" de l'année sélectionnée.
+function wrappedHTML() {
+  const annees = [...new Set(entrees.filter(e => e.date_fin).map(e => e.date_fin.slice(0, 4)))].sort().reverse();
+  if (annees.length === 0) return "";                         // aucune date → pas de rétrospective
+  if (!wrappedAnnee || !annees.includes(wrappedAnnee)) wrappedAnnee = annees[0];
+
+  const select = '<select class="hero-year" onchange="changerAnneeWrapped(this.value)">'
+    + annees.map(a => '<option value="' + a + '"' + (a === wrappedAnnee ? " selected" : "") + '>' + a + '</option>').join("")
+    + '</select>';
+  const cercles = '<div class="c1"></div><div class="c2"></div>';
+  const top = '<div class="hero-top"><span class="hero-label">Rétrospective</span>' + select + '</div>';
+
+  const s = statsAnnee(wrappedAnnee);
+  if (s.n === 0) {
+    return '<div class="hero">' + cercles + '<div class="hero-body">' + top
+      + '<p class="hero-empty">Rien de terminé en ' + wrappedAnnee + '.</p></div></div>';
+  }
+
+  const mois = s.moisTop ? moisLisible(s.moisTop + "-01") : "—";
+  const coup = s.top
+    ? '<div class="hero-coup"><span class="lbl">Coup de cœur</span>'
+      + '<span>' + echapper(s.top.titre)
+      + ((s.top.type === "serie" && s.top.saison) ? " · S" + s.top.saison : "") + '</span>'
+      + '<span class="lbl" style="margin-left:auto">Mois fort</span><span>' + mois + '</span></div>'
+    : "";
+
+  return '<div class="hero">' + cercles + '<div class="hero-body">' + top
+    + '<div class="hero-numrow"><span class="hero-big">' + s.n + '</span>'
+    +   '<span class="hero-legend">œuvres terminées en ' + wrappedAnnee + '</span></div>'
+    + '<div class="hero-metrics">'
+    +   '<span><span class="dot" style="background:var(--film)"></span>' + s.films + ' Films</span>'
+    +   '<span><span class="dot" style="background:var(--serie)"></span>' + s.series + ' Séries</span>'
+    +   '<span><span class="dot" style="background:var(--livre)"></span>' + s.livres + ' Livres</span>'
+    +   '<span class="dim">Moyenne ' + s.moy.toFixed(1).replace(".", ",") + '</span>'
+    +   '<span class="dim">' + s.cinq + ' × 5★</span>'
+    + '</div>'
+    + coup + '</div></div>';
+}
+
+// Bascule entre la vue Journal et la vue Statistiques.
+function montrerVue(nom) {
+  const estStats = (nom === "stats");
+  document.getElementById("vueJournal").style.display = estStats ? "none" : "block";
+  document.getElementById("vueStats").style.display   = estStats ? "block" : "none";
+  document.getElementById("tabJournal").classList.toggle("active", !estStats);
+  document.getElementById("tabStats").classList.toggle("active", estStats);
+  if (estStats) afficherStatsPage();
+}
+
+// Télécharge tout le carnet en fichier JSON (sauvegarde).
+function exporter() {
+  const contenu = JSON.stringify(entrees, null, 2);
+  const blob = new Blob([contenu], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mon-carnet-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Ouvre le sélecteur de fichier.
+function declencherImport() { document.getElementById("importFile").click(); }
+
+// Lit le fichier choisi, le valide, puis lance l'import.
+function lireImport(ev) {
+  const fichier = ev.target.files[0];
+  if (!fichier) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch { alert("Fichier illisible : ce n'est pas un JSON valide."); ev.target.value = ""; return; }
+    if (!Array.isArray(data)) {
+      alert("Format inattendu : le fichier doit contenir une liste d'entrées.");
+      ev.target.value = ""; return;
+    }
+    await importer(data);
+    ev.target.value = "";   // permet de re-sélectionner le même fichier plus tard
+  };
+  reader.readAsText(fichier);
+}
+
+// Réinjecte les entrées dans Supabase, en ignorant les doublons.
+async function importer(data) {
+  // Clé anti-doublon : même titre, type, saison et date de fin.
+  const cle = e => [e.titre, e.type, e.saison || "", e.date_fin || ""].join("|");
+  const dejaLa = new Set(entrees.map(cle));
+
+  const aInserer = [];
+  let ignores = 0;
+  for (const e of data) {
+    if (!e || !e.titre || !e.type || e.note == null) { ignores++; continue; }
+    if (dejaLa.has(cle(e))) { ignores++; continue; }
+    dejaLa.add(cle(e));                       // évite aussi les doublons internes au fichier
+    aInserer.push({
+      titre:    e.titre,
+      type:     e.type,
+      note:     Number(e.note),
+      avis:     e.avis || "",
+      date_fin: e.date_fin || null,
+      poster:   e.poster || "",
+      annee:    e.annee || "",
+      saison:   (e.type === "serie" && e.saison) ? Number(e.saison) : null,
+      favori:   !!e.favori,
+      genres:   Array.isArray(e.genres) ? e.genres : []
+    });
+  }
+
+  if (aInserer.length === 0) {
+    alert("Rien à importer (" + ignores + " entrée(s) déjà présente(s) ou invalide(s)).");
+    return;
+  }
+  const { error } = await db.from("entrees").insert(aInserer);
+  if (error) { alert("Erreur à l'import : " + error.message); return; }
+  await charger();
+  alert(aInserer.length + " entrée(s) importée(s)"
+    + (ignores ? ", " + ignores + " ignorée(s) (doublon ou invalide)." : "."));
+}
+
+/* =============================================================
+   DÉMARRAGE
+   ============================================================= */
+let minuteur;
+document.getElementById("titre").addEventListener("input", () => {
+  selection = null;
+  document.getElementById("chosen").style.display = "none";
+  resetSaisonUI();
+  clearTimeout(minuteur);
+  minuteur = setTimeout(rechercher, 350);
+});
+document.getElementById("type").addEventListener("change", () => {
+  majSaisonRow();   // affiche/masque le champ Saison selon le type
+  rechercher();
+});
+document.getElementById("chosenClear").addEventListener("click", effacerSelection);
+document.getElementById("ajouterBtn").addEventListener("click", ajouter);
+
+// Contrôles du journal : à chaque changement, on ré-affiche la liste filtrée.
+// Pastilles de type (Tous / Films / Séries / Livres).
+document.getElementById("typePills").addEventListener("click", (ev) => {
+  const b = ev.target.closest(".tp");
+  if (!b) return;
+  filtreType = b.dataset.type;
+  document.querySelectorAll("#typePills .tp").forEach(x => x.classList.toggle("active", x === b));
+  afficherJournal();
+});
+document.getElementById("tri").addEventListener("change", (ev) => {
+  tri = ev.target.value; afficherJournal();
+});
+document.getElementById("q").addEventListener("input", (ev) => {
+  recherche = ev.target.value.trim(); afficherJournal();
+});
+// Filtre favoris (bascule).
+document.getElementById("favFilter").addEventListener("click", () => {
+  favorisOnly = !favorisOnly;
+  const b = document.getElementById("favFilter");
+  b.classList.toggle("on", favorisOnly);
+  b.textContent = (favorisOnly ? "♥" : "♡") + " Favoris";
+  afficherJournal();
+});
+// Filtre par genre.
+document.getElementById("filtreGenre").addEventListener("change", (ev) => {
+  filtreGenre = ev.target.value; afficherJournal();
+});
+// Récupération des genres des entrées existantes.
+document.getElementById("enrichBtn").addEventListener("click", enrichirGenres);
+
+// Thème clair / sombre.
+function majThemeIcon() {
+  document.getElementById("themeBtn").textContent =
+    document.documentElement.classList.contains("dark") ? "☀" : "☾";
+}
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const dark = document.documentElement.classList.toggle("dark");
+  try { localStorage.setItem("carnet-theme", dark ? "dark" : "light"); } catch (e) {}
+  majThemeIcon();
+});
+majThemeIcon();
+
+// Fenêtre de modification : fermeture et enregistrement.
+document.getElementById("modalClose").addEventListener("click", fermerEdition);
+document.getElementById("enregistrerEdit").addEventListener("click", enregistrerEdition);
+document.getElementById("modalBg").addEventListener("click", (ev) => {
+  if (ev.target.id === "modalBg") fermerEdition();   // clic sur le fond → ferme
+});
+// Fiche détaillée : fermeture.
+document.getElementById("detailClose").addEventListener("click", fermerDetail);
+document.getElementById("detailEdit").addEventListener("click", () => {
+  const id = detailId;
+  fermerDetail();
+  if (id != null) ouvrirEdition(id);   // on bascule vers la fenêtre de modification
+});
+document.getElementById("detailDelete").addEventListener("click", async () => {
+  const id = detailId;
+  fermerDetail();
+  if (id != null) await supprimer(id);
+});
+document.getElementById("detailBg").addEventListener("click", (ev) => {
+  if (ev.target.id === "detailBg") fermerDetail();
+});
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape") { fermerEdition(); fermerDetail(); }
+});
+
+// Onglets et export.
+document.getElementById("tabJournal").addEventListener("click", () => montrerVue("journal"));
+document.getElementById("tabStats").addEventListener("click", () => montrerVue("stats"));
+document.getElementById("exportBtn").addEventListener("click", exporter);
+document.getElementById("importBtn").addEventListener("click", declencherImport);
+document.getElementById("importFile").addEventListener("change", lireImport);
+
+construireEtoilesFormulaire();
+majSaisonRow();
+charger();   // on va chercher les entrées dans Supabase
+</script>
+</body>
+</html><style>
+  :root {
+    --bg:        #f2ede3;
+    --surface:   #fffdf8;
+    --ink:       #221c16;
+    --muted:     #8f8677;
+    --line:      #ded7c8;
+    --accent:    #16332e;   /* pétrole */
+    --star:      #c99a3c;   /* laiton doré */
+    --film:      #c96f4c;   /* terracotta */
+    --serie:     #3d7d74;   /* sarcelle */
+    --livre:     #c79a3e;   /* ocre */
+    --field:     #f6f1e8;
+    --hover:     #f0e9db;
+    --text2:     #4a4336;
+    --hero:      #16332e;   /* fond du bandeau + pastilles de note */
+    --hero-text: #f0e9db;
+    --hm1:       #d7e3dc;
+    --hm2:       #9cc0b4;
+    --hm3:       #4f8578;
+    --hm4:       #16332e;
+    --radius:    12px;
+    --shadow:    0 1px 2px rgba(34,28,22,.06), 0 8px 24px rgba(34,28,22,.08);
+  }
+  /* Jeu de couleurs sombre (appliqué via la classe .dark sur <html>). */
+  :root.dark {
+    --bg:        #16130d;
+    --surface:   #221d15;
+    --ink:       #f0e9db;
+    --muted:     #9c9284;
+    --line:      #3a3226;
+    --accent:    #4a9184;
+    --star:      #d9a94e;
+    --film:      #e0895f;
+    --serie:     #5aa89a;
+    --livre:     #d9b356;
+    --field:     #221d15;
+    --hover:     #2a241a;
+    --text2:     #d3cabb;
+    --hero:      #1d4a42;
+    --hero-text: #f0e9db;
+    --hm1:       #223330;
+    --hm2:       #2f5d54;
+    --hm3:       #4a9184;
+    --hm4:       #7fc9b8;
+    --shadow:    0 1px 2px rgba(0,0,0,.30), 0 8px 24px rgba(0,0,0,.45);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Space Grotesk", system-ui, sans-serif; line-height: 1.5;
+    transition: background-color .2s ease, color .2s ease;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  }
+  header h1 {
+    font-family: "Instrument Serif", serif; font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.02em; margin: 0;
+  }
+  header p { color: var(--muted); margin: 4px 0 0; font-size: 1.05rem; }
+  .theme-btn {
+    flex: none; background: var(--surface); border: 1px solid var(--line);
+    color: var(--ink); border-radius: 10px; width: 42px; height: 42px;
+    font-size: 1.15rem; cursor: pointer; line-height: 1; box-shadow: var(--shadow);
+  }
+  .theme-btn:hover { border-color: var(--accent); }
+
+  .stats {
+    display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    margin: 28px 0 36px; padding: 22px 26px;
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .stats-hero { display: flex; flex-direction: column; }
+  .stats-hero .num-big {
+    font-family: "Instrument Serif", serif; font-size: 2.7rem; font-weight: 600; line-height: 1;
+  }
+  .stats-hero .lbl {
+    color: var(--muted); font-size: .8rem; text-transform: uppercase;
+    letter-spacing: .06em; margin-top: 5px;
+  }
+  .stats-sep { align-self: stretch; width: 1px; background: var(--line); }
+  .stats-types { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 220px; }
+  .type-row { display: flex; gap: 22px; flex-wrap: wrap; }
+  .type-stat { display: flex; align-items: baseline; gap: 7px; font-size: .92rem; color: var(--muted); }
+  .type-stat b {
+    font-family: "Instrument Serif", serif; font-weight: 600; font-size: 1.2rem; color: var(--ink);
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; align-self: center; }
+  .dot.film { background: var(--film); }
+  .dot.serie { background: var(--serie); }
+  .dot.livre { background: var(--livre); }
+  .dist { display: flex; height: 8px; border-radius: 6px; overflow: hidden; background: var(--bg); }
+  .dist span { display: block; height: 100%; }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 32px; align-items: start; }
+  @media (max-width: 760px) {
+    .layout { grid-template-columns: 1fr; }
+    .layout .panel { position: static; }   /* sélecteur plus spécifique → gagne sur le sticky */
+  }
+
+  .panel {
+    background: var(--surface); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 24px; position: sticky; top: 24px;
+    border-top: 4px solid var(--film);
+  }
+  .panel h2 { font-family: "Instrument Serif", serif; margin: 0 0 20px; font-size: 1.7rem; }
+  label {
+    display: block; font-size: .82rem; font-weight: 500; color: var(--muted);
+    margin: 16px 0 6px; text-transform: uppercase; letter-spacing: .04em;
+  }
+  input[type="text"], input[type="date"], textarea, select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 8px; font: inherit; color: var(--ink); background: var(--field);
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+
+  /* Étoiles à remplissage : une étoile grise de fond, une dorée par-dessus
+     dont on règle la largeur (0, 50 ou 100 %) pour obtenir des demi-étoiles. */
+  .st {
+    position: relative; display: inline-block; width: 1em; height: 1em;
+    line-height: 1; color: var(--line);
+  }
+  .st::before { content: "★"; position: absolute; left: 0; top: 0; }
+  .st .fill {
+    position: absolute; left: 0; top: 0; height: 100%; width: 0; overflow: hidden;
+    color: var(--star);
+  }
+  .st .fill::before { content: "★"; position: absolute; left: 0; top: 0; }
+  .st .half { position: absolute; top: 0; height: 100%; width: 50%; z-index: 2; }
+  .st .half.left  { left: 0; }
+  .st .half.right { right: 0; }
+  .stars-input { display: inline-flex; gap: 3px; margin-top: 6px; font-size: 1.7rem; }
+  .stars-input .st { cursor: pointer; }
+  .rating { display: inline-flex; gap: 3px; }
+
+  .btn {
+    width: 100%; margin-top: 22px; padding: 12px; background: var(--accent);
+    color: #fff; border: none; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .search-box { position: relative; }
+  .results {
+    position: absolute; z-index: 10; left: 0; right: 0; top: calc(100% + 4px);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: var(--shadow); max-height: 320px; overflow-y: auto;
+  }
+  .results:empty { display: none; }
+  .result {
+    display: flex; gap: 10px; padding: 8px 10px; cursor: pointer; align-items: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .result:last-child { border-bottom: none; }
+  .result:hover { background: var(--hover); }
+  .result img { width: 34px; height: 50px; object-fit: cover; border-radius: 3px; background: var(--line); flex: none; }
+  .result .r-title { font-weight: 600; font-size: .92rem; }
+  .result .r-sub { color: var(--muted); font-size: .8rem; }
+  .results .hint { padding: 12px; color: var(--muted); font-size: .85rem; }
+
+  .chosen {
+    display: none; gap: 10px; align-items: center; margin-top: 10px;
+    padding: 8px; background: var(--hover); border-radius: 8px;
+  }
+  .chosen img { width: 38px; height: 56px; object-fit: cover; border-radius: 4px; background: var(--line); flex: none; }
+  .chosen .c-title { font-weight: 600; font-size: .92rem; line-height: 1.2; }
+  .chosen .c-sub { color: var(--muted); font-size: .8rem; }
+  .chosen .c-clear {
+    margin-left: auto; background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 1rem;
+  }
+
+  .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }
+  .ctrl-search {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px;
+    font: inherit; background: var(--surface); color: var(--ink); box-sizing: border-box;
+  }
+  .ctrl-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .controls-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .controls-row2 { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+
+  /* Pastilles de type colorées */
+  .type-pills { display: flex; gap: 7px; flex-wrap: wrap; }
+  .tp {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+    padding: 5px 14px; font: inherit; font-size: .82rem; cursor: pointer; color: var(--ink);
+  }
+  .tp[data-type="film"]  { color: var(--film); }
+  .tp[data-type="serie"] { color: var(--serie); }
+  .tp[data-type="livre"] { color: var(--livre); }
+  .tp.active { color: #fff; border-color: transparent; }
+  .tp.active[data-type="tous"]  { background: var(--accent); }
+  .tp.active[data-type="film"]  { background: var(--film); }
+  .tp.active[data-type="serie"] { background: var(--serie); }
+  .tp.active[data-type="livre"] { background: var(--livre); }
+
+  /* Favoris discret */
+  .fav-toggle {
+    margin-left: auto; background: none; border: none; cursor: pointer;
+    color: var(--muted); font: inherit; font-size: .85rem; padding: 5px 4px;
+  }
+  .fav-toggle.on { color: var(--film); }
+
+  /* Menus fins (genre, tri) et bouton genres */
+  .ctrl-mini {
+    background: transparent; border: none; border-bottom: 1.5px solid var(--line);
+    border-radius: 0; padding: 4px 2px; font: inherit; font-size: .85rem; color: var(--muted); cursor: pointer;
+  }
+  .ctrl-mini:focus { outline: none; border-bottom-color: var(--accent); }
+  .btn-mini { color: var(--film); }
+  .btn-mini:disabled { opacity: .6; cursor: default; }
+
+  /* Cœur favori sur chaque entrée */
+  .fav {
+    background: none; border: none; cursor: pointer; font-size: 1.15rem;
+    padding: 0; color: var(--line); align-self: center; line-height: 1;
+  }
+  .fav.on { color: var(--film); }
+
+  /* Fiche détaillée */
+  .entry .poster, .entry h3 { cursor: pointer; }
+  .modal-detail { max-width: 500px; }
+  .detail-head { display: flex; gap: 18px; margin-bottom: 6px; }
+  .detail-poster { width: 110px; height: 165px; object-fit: cover; border-radius: 8px; flex: none; box-shadow: 0 2px 8px rgba(34,39,31,.18); background: var(--line); }
+  .detail-meta { min-width: 0; }
+  .detail-meta h2 { font-family: "Instrument Serif", serif; font-weight: 600; font-size: 1.4rem; margin: 0 30px 4px 0; }
+  .detail-sub { color: var(--muted); font-size: .9rem; margin-bottom: 8px; }
+  .detail-stars { font-size: 1.1rem; margin-bottom: 8px; }
+  .detail-line { font-size: .9rem; margin-top: 8px; }
+  .detail-genres { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .detail-genres .genre {
+    font-size: .74rem; background: var(--bg); border: 1px solid var(--line);
+    color: var(--muted); padding: 2px 9px; border-radius: 20px;
+  }
+  .detail-avis { margin-top: 6px; }
+  .detail-avis h3, .detail-section h3 {
+    font-family: "Instrument Serif", serif; font-weight: 600; font-size: 1rem; margin: 16px 0 6px;
+  }
+  .detail-avis p, .detail-section p, #detailSynopsis { margin: 0; color: var(--text2); line-height: 1.55; }
+  .detail-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .btn-ghost {
+    flex: 1; padding: 10px; background: none; border: 1px solid var(--line);
+    border-radius: 8px; font: inherit; font-size: .9rem; cursor: pointer; color: var(--ink);
+  }
+  .btn-ghost:hover { border-color: var(--accent); }
+  .btn-ghost.danger { color: var(--film); }
+  .btn-ghost.danger:hover { border-color: var(--film); }
+
+  /* Onglets Journal / Statistiques + bouton Exporter */
+  .tabs { display: flex; gap: 6px; align-items: center; margin-bottom: 18px; }
+  .tab {
+    background: none; border: none; font: inherit; font-weight: 600; cursor: pointer;
+    color: var(--muted); padding: 8px 4px; border-bottom: 2px solid transparent;
+  }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab-actions { margin-left: auto; display: flex; gap: 6px; }
+  .tab-btn {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 12px; font: inherit; font-size: .85rem;
+    cursor: pointer; color: var(--ink);
+  }
+  .tab-btn:hover { border-color: var(--accent); }
+
+  /* Page de statistiques */
   .stats-page { display: grid; gap: 20px; }
   .stat-card {
     background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
