@@ -512,18 +512,56 @@
     position: absolute; top: 16px; right: 16px; background: none; border: none;
     font-size: 1.2rem; cursor: pointer; color: var(--muted);
   }
+  /* Écran de connexion */
+  #authScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .auth-card {
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    border-top: 4px solid var(--film); padding: 32px; max-width: 380px; width: 100%;
+  }
+  .auth-card h1 { font-family: "Instrument Serif", serif; font-size: 2.6rem; margin: 0; }
+  .auth-sub { color: var(--muted); margin: 6px 0 24px; line-height: 1.5; }
+  .auth-card label { display: block; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .auth-card input {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px;
+    font: inherit; background: var(--field); color: var(--ink); margin-bottom: 16px; box-sizing: border-box;
+  }
+  .auth-card input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .auth-card .btn { width: 100%; }
+  .auth-msg { margin: 16px 0 0; font-size: .9rem; color: var(--text2); line-height: 1.5; }
+
+  /* En-tête : actions (déconnexion + thème) */
+  .header-actions { flex: none; display: flex; gap: 10px; align-items: center; }
+  .logout-btn {
+    background: none; border: 1px solid var(--line); border-radius: 10px; height: 42px;
+    padding: 0 14px; font: inherit; font-size: .85rem; cursor: pointer; color: var(--ink);
+  }
+  .logout-btn:hover { border-color: var(--accent); }
 </style>
 </head>
 
 <body>
-<div class="wrap">
+<div id="authScreen" style="display:none">
+  <div class="auth-card">
+    <h1>Mon Carnet</h1>
+    <p class="auth-sub">Connecte-toi pour retrouver ton carnet, partout et à tout moment.</p>
+    <label for="authEmail">Adresse e-mail</label>
+    <input type="email" id="authEmail" placeholder="ton@email.fr" autocomplete="email">
+    <button class="btn" id="authSend">M'envoyer un lien de connexion</button>
+    <p class="auth-msg" id="authMsg"></p>
+  </div>
+</div>
+
+<div class="wrap" style="display:none">
 
   <header>
     <div>
       <h1>Mon Carnet</h1>
       <p>Ce que j'ai vu, regardé et lu — noté et daté.</p>
     </div>
-    <button id="themeBtn" class="theme-btn" title="Basculer clair / sombre" aria-label="Basculer le thème">☾</button>
+    <div class="header-actions">
+      <button id="logoutBtn" class="logout-btn" title="Se déconnecter">Déconnexion</button>
+      <button id="themeBtn" class="theme-btn" title="Basculer clair / sombre" aria-label="Basculer le thème">☾</button>
+    </div>
   </header>
 
   <div class="stats" id="stats"></div>
@@ -1746,7 +1784,56 @@ document.getElementById("importFile").addEventListener("change", lireImport);
 
 construireEtoilesFormulaire();
 majSaisonRow();
-charger();   // on va chercher les entrées dans Supabase
+
+/* =============================================================
+   AUTHENTIFICATION (lien magique par e-mail)
+   ============================================================= */
+let appChargee = false;
+
+// Affiche l'appli ou l'écran de connexion selon la présence d'une session.
+function majEcran(session) {
+  const app  = document.querySelector(".wrap");
+  const auth = document.getElementById("authScreen");
+  if (session) {
+    auth.style.display = "none";
+    app.style.display  = "";
+    if (!appChargee) { appChargee = true; charger(); }   // on charge le carnet une seule fois
+  } else {
+    app.style.display  = "none";
+    auth.style.display = "flex";
+    appChargee = false;
+    entrees = [];
+  }
+}
+
+async function initAuth() {
+  const { data } = await db.auth.getSession();
+  majEcran(data.session);
+  db.auth.onAuthStateChange((_event, session) => majEcran(session));
+}
+
+// Envoie le lien magique de connexion à l'adresse saisie.
+async function envoyerLien() {
+  const email = document.getElementById("authEmail").value.trim();
+  const msg = document.getElementById("authMsg");
+  if (!email) { msg.textContent = "Entre ton adresse e-mail."; return; }
+  const btn = document.getElementById("authSend");
+  btn.disabled = true; msg.textContent = "Envoi en cours…";
+  const { error } = await db.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.origin + window.location.pathname }
+  });
+  btn.disabled = false;
+  msg.textContent = error
+    ? "Erreur : " + error.message
+    : "Lien envoyé ! Ouvre ta boîte mail (pense aux spams) et clique sur le lien — tu seras connecté automatiquement.";
+}
+
+document.getElementById("authSend").addEventListener("click", envoyerLien);
+document.getElementById("authEmail").addEventListener("keydown", (ev) => { if (ev.key === "Enter") envoyerLien(); });
+document.getElementById("logoutBtn").addEventListener("click", async () => { await db.auth.signOut(); });
+
+initAuth();
 </script>
 </body>
 </html>
