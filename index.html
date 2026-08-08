@@ -317,6 +317,24 @@
   .card-serie  { border-top-color: var(--serie); }
   .card-livre  { border-top-color: var(--livre); }
   .card-star   { border-top-color: var(--star); }
+  /* Paire de blocs-affiches (note moyenne / genre) — champs de couleur saturés */
+  .stat-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+  .stat-panel {
+    position: relative; overflow: hidden; border-radius: 18px; padding: 24px;
+    min-height: 190px; color: #f7f1e8; box-shadow: var(--shadow);
+  }
+  .panel-film  { background: #c96f4c; }
+  .panel-serie { background: #3d7d74; }
+  .panel-body { position: relative; }
+  .panel-lab { font-size: .66rem; letter-spacing: .24em; text-transform: uppercase; color: rgba(247,241,232,.8); }
+  .panel-big { font-family: "Instrument Serif", serif; font-size: 4.6rem; line-height: .9; margin-top: 6px; }
+  .panel-word { font-family: "Instrument Serif", serif; font-size: 2.5rem; line-height: 1.02; margin-top: 8px; }
+  .panel-sub { font-size: .85rem; margin-top: 10px; color: rgba(247,241,232,.9); }
+  .panel-film .c1 { position: absolute; bottom: -40px; right: -24px; width: 130px; height: 130px; border-radius: 50%; background: rgba(217,169,78,.9); }
+  .panel-film .c2 { position: absolute; bottom: -10px; right: 44px; width: 80px; height: 80px; border-radius: 50%; background: rgba(22,51,46,.35); }
+  .panel-serie .c1 { position: absolute; top: -36px; right: -20px; width: 120px; height: 120px; border-radius: 50%; background: rgba(217,169,78,.9); }
+  .panel-serie .c2 { position: absolute; top: 18px; right: 40px; width: 78px; height: 78px; border-radius: 50%; background: rgba(201,111,76,.75); }
+
   /* "Vue d'ensemble" : carte claire avec grand chiffre + cercles décoratifs (écho du bandeau) */
   .vue-card { position: relative; overflow: hidden; }
   .vue-card .c1 { position: absolute; top: -28px; right: -16px; width: 82px; height: 82px; border-radius: 50%; background: #d9a94e; }
@@ -1407,7 +1425,7 @@ function afficherStatsPage() {
     return;
   }
 
-  const moyenne = (entrees.reduce((s, e) => s + Number(e.note), 0) / n).toFixed(2);
+  const moyenne1 = (entrees.reduce((s, e) => s + Number(e.note), 0) / n).toFixed(1).replace(".", ",");
 
   // Œuvres par année (d'après la date de fin).
   const parAnnee = {};
@@ -1418,41 +1436,47 @@ function afficherStatsPage() {
     ? annees.map(y => barRow(y, parAnnee[y], maxAnnee, "var(--serie)")).join("")
     : '<p class="muted-note">Aucune date renseignée pour l\'instant.</p>';
 
-  // Mois le plus actif.
+  // Mois le plus actif (version courte pour le bloc-affiche).
   const parMois = {};
   entrees.forEach(e => { if (e.date_fin) { const m = e.date_fin.slice(0, 7); parMois[m] = (parMois[m] || 0) + 1; } });
   const moisKeys = Object.keys(parMois);
-  let moisTop = "—";
+  let moisFort = "";
   if (moisKeys.length) {
     const best = moisKeys.reduce((a, b) => (parMois[b] > parMois[a] ? b : a));
-    moisTop = moisLisible(best + "-01") + " — " + parMois[best] + " entrée" + (parMois[best] > 1 ? "s" : "");
+    moisFort = moisLisible(best + "-01");
   }
 
-  // Mieux notées (top 5) : affiche + note en gros chiffre.
-  const top = [...entrees].sort((a, b) => Number(b.note) - Number(a.note)).slice(0, 5);
-  const topHtml = top.map(e =>
-    '<div class="top-item">'
-    + (e.poster
-        ? '<img class="top-poster" src="' + e.poster + '" alt="">'
-        : '<span class="top-poster ph ph-' + e.type + '">' + echapper((e.titre || "?").charAt(0).toUpperCase()) + '</span>')
-    + '<div class="top-body"><div class="top-title">' + echapper(e.titre)
-    +   ((e.type === "serie" && e.saison) ? " · S" + e.saison : "") + '</div></div>'
-    + '<span class="top-score">' + String(Number(e.note)).replace(".", ",") + '</span>'
-    + '</div>'
-  ).join("");
+  // Genre de prédilection (le plus consommé, tous supports).
+  const compteG = {};
+  entrees.forEach(e => (e.genres || []).forEach(g => { compteG[g] = (compteG[g] || 0) + 1; }));
+  const genreTop = Object.keys(compteG).sort((a, b) => compteG[b] - compteG[a])[0];
+  const genreTopN = genreTop ? compteG[genreTop] : 0;
+
+  // Bloc-affiche "Note moyenne" (terracotta).
+  const panelMoyenne =
+      '<div class="stat-panel panel-film"><div class="c1"></div><div class="c2"></div><div class="panel-body">'
+    +   '<span class="panel-lab">Note moyenne</span>'
+    +   '<div class="panel-big">' + moyenne1 + '</div>'
+    +   '<div class="panel-sub">sur ' + n + ' œuvre' + (n > 1 ? "s" : "")
+    +     (moisFort ? ' · mois fort : ' + moisFort : "") + '</div>'
+    + '</div></div>';
+
+  // Bloc-affiche "Genre de prédilection" (sarcelle).
+  const panelGenre =
+      '<div class="stat-panel panel-serie"><div class="c1"></div><div class="c2"></div><div class="panel-body">'
+    +   '<span class="panel-lab">Genre de prédilection</span>'
+    +   '<div class="panel-word">' + (genreTop ? echapper(genreTop) : "—") + '</div>'
+    +   '<div class="panel-sub">' + (genreTop
+          ? genreTopN + ' œuvre' + (genreTopN > 1 ? "s" : "") + ' · ta signature'
+          : 'charge tes genres depuis le journal') + '</div>'
+    + '</div></div>';
 
   zone.innerHTML =
       '<div class="stats-page">'
     + wrappedHTML()
-    + '<div class="stat-card card-film vue-card"><div class="c1"></div><div class="c2"></div>'
-    +   '<h3>Vue d\'ensemble</h3>'
-    +   '<div class="vue-big">' + moyenne.replace(".", ",") + '</div>'
-    +   '<div class="muted-note">note moyenne sur ' + n + ' entrées</div>'
-    +   '<div class="muted-note" style="margin-top:6px">Mois le plus actif — ' + moisTop + '</div>'
-    + '</div>'
+    + '<div class="stat-pair">' + panelMoyenne + panelGenre + '</div>'
     + genresBlockHTML()
     + '<div class="stat-card card-serie"><h3>Œuvres par année</h3>' + distAnnees + '</div>'
-    + '<div class="stat-card card-star"><h3>Mieux notées</h3><div class="top-list">' + topHtml + '</div></div>'
     + heatmapHTML()
     + '</div>';
 }
