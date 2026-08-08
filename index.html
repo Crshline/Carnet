@@ -546,6 +546,7 @@
   .auth-card input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
   .auth-card .btn { width: 100%; }
   .auth-msg { margin: 16px 0 0; font-size: .9rem; color: var(--text2); line-height: 1.5; }
+  .auth-back { display: block; margin: 12px auto 0; background: none; border: none; color: var(--muted); font: inherit; font-size: .85rem; cursor: pointer; text-decoration: underline; }
 
   /* En-tête : actions (déconnexion + thème) */
   .header-actions { flex: none; display: flex; gap: 10px; align-items: center; }
@@ -562,9 +563,17 @@
   <div class="auth-card">
     <h1>Mon Carnet</h1>
     <p class="auth-sub">Connecte-toi pour retrouver ton carnet, partout et à tout moment.</p>
-    <label for="authEmail">Adresse e-mail</label>
-    <input type="email" id="authEmail" placeholder="ton@email.fr" autocomplete="email">
-    <button class="btn" id="authSend">M'envoyer un lien de connexion</button>
+    <div id="authStep1">
+      <label for="authEmail">Adresse e-mail</label>
+      <input type="email" id="authEmail" placeholder="ton@email.fr" autocomplete="email">
+      <button class="btn" id="authSend">M'envoyer un code</button>
+    </div>
+    <div id="authStep2" style="display:none">
+      <label for="authCode">Code reçu par e-mail</label>
+      <input type="text" id="authCode" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
+      <button class="btn" id="authVerify">Se connecter</button>
+      <button class="auth-back" id="authBack">Changer d'adresse</button>
+    </div>
     <p class="auth-msg" id="authMsg"></p>
   </div>
 </div>
@@ -662,7 +671,7 @@
               <option value="note_asc">Note — basse</option>
               <option value="titre">Titre A→Z</option>
             </select>
-            <button id="enrichBtn" class="ctrl-mini btn-mini" style="display:none" title="Récupérer les genres des entrées existantes">Récupérer les genres</button>
+            <button id="enrichBtn" class="ctrl-mini btn-mini" style="display:none" title="Recalculer les genres de toutes les entrées">Actualiser les genres</button>
           </div>
         </div>
         <div id="journal"></div>
@@ -1033,7 +1042,7 @@ async function detailsTMDB(e, kind) {
   if (!r2.ok) throw new Error("TMDB " + r2.status);
   const d = await r2.json();
 
-  const genres = (d.genres || []).map(g => g.name);
+  const genres = normaliserGenres((d.genres || []).map(g => g.name), 2);
   let ligne = "";
   if (kind === "movie") {
     const real = ((d.credits && d.credits.crew) || []).filter(c => c.job === "Director").map(c => c.name);
@@ -1065,11 +1074,54 @@ async function detailsLivre(e) {
     } catch (_) { /* description facultative */ }
   }
   const ligne = doc.author_name ? "Auteur : " + doc.author_name.slice(0, 2).join(", ") : "";
-  const genres = (doc.subject || []).slice(0, 4);
+  const genres = normaliserGenres(doc.subject || [], 2);
   return { synopsis, ligne, genres };
 }
 
 /* ---------- Genres ---------- */
+
+// Table de correspondance : n'importe quel libellé (fr/en) -> genre canonique.
+// Les motifs les plus précis d'abord ; "Fiction" ne sert que de repli.
+const GENRE_CANON = [
+  [/science.?fiction|sci.?fi|\bsf\b|anticipation/i, "Science-Fiction"],
+  [/fantasy|fantastique|fantastic|magie|merveilleux/i, "Fantastique"],
+  [/horror|horreur|terreur|épouvante|epouvante|gothic/i, "Horreur"],
+  [/thriller|suspense/i, "Thriller"],
+  [/policier|detective|détective|mystery|mystère|mystere|\bcrime\b|polar|enquête|enquete|noir/i, "Policier"],
+  [/romance|romantic|romantique|sentimental|\bamour\b|harlequin/i, "Romance"],
+  [/aventure|adventure/i, "Aventure"],
+  [/comed|comédie|comedie|humor|humour|satire/i, "Comédie"],
+  [/drama|drame|dramatique/i, "Drame"],
+  [/\baction\b/i, "Action"],
+  [/histor|histoire|historique/i, "Histoire"],
+  [/biograph|autobiograph|mémoire|memoir/i, "Biographie"],
+  [/poet|poésie|poesie|poème|poeme/i, "Poésie"],
+  [/théâtre|theatre|theater|\bplay\b|pièce de/i, "Théâtre"],
+  [/\bwar\b|guerre|military|militaire/i, "Guerre"],
+  [/western/i, "Western"],
+  [/young.?adult|juvenile|jeunesse|children|enfant|\bkids\b|conte/i, "Jeunesse"],
+  [/document|documentaire/i, "Documentaire"],
+  [/animation|\banime\b|animé|animated/i, "Animation"],
+  [/family|familial/i, "Familial"],
+  [/music|musique|musical/i, "Musique"],
+  [/philosoph/i, "Philosophie"],
+  [/essay|essai|non.?fiction|nonfiction|documentary/i, "Essai"]
+];
+
+// Range une liste de libellés bruts en 1 à 2 genres canoniques.
+function normaliserGenres(raw, max) {
+  max = max || 2;
+  const liste = (raw || []).map(s => String(s));
+  const out = [];
+  for (const [re, nom] of GENRE_CANON) {
+    if (out.length >= max) break;
+    if (out.includes(nom)) continue;
+    if (liste.some(s => re.test(s))) out.push(nom);
+  }
+  // Repli "Fiction" seulement si aucun genre précis n'a été trouvé.
+  if (out.length === 0 && liste.some(s => /fiction|\broman\b|\bnovel\b/i.test(s))) out.push("Fiction");
+  return out;
+}
 
 // Récupère les genres d'une œuvre. Pour films/séries on utilise l'id TMDB
 // (précis) ; pour les livres on repasse par la recherche Open Library.
@@ -1083,16 +1135,16 @@ async function genresPour(type, item) {
     if (item.id) {
       const r = await fetch("https://api.themoviedb.org/3/" + kind + "/" + item.id
         + "?api_key=" + CLE_TMDB + "&language=fr-FR");
-      if (r.ok) return ((await r.json()).genres || []).map(g => g.name);
+      if (r.ok) return normaliserGenres(((await r.json()).genres || []).map(g => g.name), 2);
     }
     return [];
   } catch (_) { return []; }
 }
 
-// Récupère les genres de toutes les entrées qui n'en ont pas encore.
+// Recalcule et normalise les genres de toutes les entrées.
 async function enrichirGenres() {
-  const aFaire = entrees.filter(e => !e.genres || e.genres.length === 0);
-  if (aFaire.length === 0) { alert("Toutes tes entrées ont déjà leurs genres."); return; }
+  const aFaire = entrees.slice();
+  if (aFaire.length === 0) return;
 
   const btn = document.getElementById("enrichBtn");
   const libelle = btn.textContent;
@@ -1102,15 +1154,16 @@ async function enrichirGenres() {
     const e = aFaire[i];
     btn.textContent = "Genres… " + (i + 1) + "/" + aFaire.length;
     try {
-      const info = await chargerDetails(e);        // recherche par titre (+ année)
+      const info = await chargerDetails(e);        // recherche par titre (+ année), genres normalisés
       const g = (info && info.genres) ? info.genres : [];
-      if (g.length) { await db.from("entrees").update({ genres: g }).eq("id", e.id); ok++; }
+      await db.from("entrees").update({ genres: g }).eq("id", e.id);
+      ok++;
     } catch (_) { /* on ignore les échecs ponctuels */ }
   }
   btn.textContent = libelle;
   btn.disabled = false;
   await charger();
-  alert(ok + " entrée(s) enrichie(s) en genres.");
+  alert(ok + " entrée(s) mises à jour.");
 }
 
 // Remplit le menu de genres et affiche/masque les contrôles selon les données.
@@ -1134,9 +1187,8 @@ function majControlesGenre() {
   else { filtreGenre = ""; sel.value = ""; }
   sel.style.display = genres.length ? "block" : "none";
 
-  // Le bouton d'enrichissement n'apparaît que s'il reste des entrées sans genre.
-  const manquants = entrees.some(e => !e.genres || e.genres.length === 0);
-  document.getElementById("enrichBtn").style.display = manquants ? "block" : "none";
+  // Bouton d'actualisation des genres : disponible dès qu'il y a des entrées.
+  document.getElementById("enrichBtn").style.display = entrees.length ? "block" : "none";
 }
 
 // La ligne Saison n'apparaît qu'une fois une série sélectionnée (via choisir).
@@ -1827,6 +1879,10 @@ function majEcran(session) {
     auth.style.display = "flex";
     appChargee = false;
     entrees = [];
+    // On revient toujours à l'étape "e-mail".
+    document.getElementById("authStep1").style.display = "";
+    document.getElementById("authStep2").style.display = "none";
+    document.getElementById("authCode").value = "";
   }
 }
 
@@ -1836,8 +1892,10 @@ async function initAuth() {
   db.auth.onAuthStateChange((_event, session) => majEcran(session));
 }
 
-// Envoie le lien magique de connexion à l'adresse saisie.
-async function envoyerLien() {
+let authEmailPending = "";
+
+// Étape 1 : envoie un code à 6 chiffres à l'adresse saisie.
+async function envoyerCode() {
   const email = document.getElementById("authEmail").value.trim();
   const msg = document.getElementById("authMsg");
   if (!email) { msg.textContent = "Entre ton adresse e-mail."; return; }
@@ -1848,13 +1906,39 @@ async function envoyerLien() {
     options: { emailRedirectTo: window.location.origin + window.location.pathname }
   });
   btn.disabled = false;
-  msg.textContent = error
-    ? "Erreur : " + error.message
-    : "Lien envoyé ! Ouvre ta boîte mail (pense aux spams) et clique sur le lien — tu seras connecté automatiquement.";
+  if (error) { msg.textContent = "Erreur : " + error.message; return; }
+  authEmailPending = email;
+  document.getElementById("authStep1").style.display = "none";
+  document.getElementById("authStep2").style.display = "";
+  msg.textContent = "Code envoyé ! Ouvre ton e-mail (pense aux spams) et saisis le code à 6 chiffres.";
+  document.getElementById("authCode").focus();
 }
 
-document.getElementById("authSend").addEventListener("click", envoyerLien);
-document.getElementById("authEmail").addEventListener("keydown", (ev) => { if (ev.key === "Enter") envoyerLien(); });
+// Étape 2 : vérifie le code saisi et ouvre la session (dans ce même contexte).
+async function verifierCode() {
+  const code = document.getElementById("authCode").value.trim();
+  const msg = document.getElementById("authMsg");
+  if (!code) { msg.textContent = "Saisis le code reçu."; return; }
+  const btn = document.getElementById("authVerify");
+  btn.disabled = true; msg.textContent = "Vérification…";
+  const { error } = await db.auth.verifyOtp({ email: authEmailPending, token: code, type: "email" });
+  btn.disabled = false;
+  if (error) { msg.textContent = "Code invalide ou expiré. Réessaie."; return; }
+  // Succès : onAuthStateChange affichera l'appli automatiquement.
+}
+
+function retourEmail() {
+  document.getElementById("authStep2").style.display = "none";
+  document.getElementById("authStep1").style.display = "";
+  document.getElementById("authCode").value = "";
+  document.getElementById("authMsg").textContent = "";
+}
+
+document.getElementById("authSend").addEventListener("click", envoyerCode);
+document.getElementById("authEmail").addEventListener("keydown", (ev) => { if (ev.key === "Enter") envoyerCode(); });
+document.getElementById("authVerify").addEventListener("click", verifierCode);
+document.getElementById("authCode").addEventListener("keydown", (ev) => { if (ev.key === "Enter") verifierCode(); });
+document.getElementById("authBack").addEventListener("click", retourEmail);
 document.getElementById("logoutBtn").addEventListener("click", async () => { await db.auth.signOut(); });
 
 initAuth();
