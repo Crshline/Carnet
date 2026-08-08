@@ -1083,6 +1083,8 @@ async function detailsLivre(e) {
 // Table de correspondance : n'importe quel libellé (fr/en) -> genre canonique.
 // Les motifs les plus précis d'abord ; "Fiction" ne sert que de repli.
 const GENRE_CANON = [
+  [/manga/i, "Manga"],
+  [/comic|bande dessin|graphic novel|roman graphique|\bbd\b/i, "BD"],
   [/science.?fiction|sci.?fi|\bsf\b|anticipation/i, "Science-Fiction"],
   [/fantasy|fantastique|fantastic|magie|merveilleux/i, "Fantastique"],
   [/horror|horreur|terreur|épouvante|epouvante|gothic/i, "Horreur"],
@@ -1105,6 +1107,8 @@ const GENRE_CANON = [
   [/family|familial/i, "Familial"],
   [/music|musique|musical/i, "Musique"],
   [/philosoph/i, "Philosophie"],
+  [/short stor|nouvelle/i, "Nouvelle"],
+  [/classic|classique/i, "Classique"],
   [/essay|essai|non.?fiction|nonfiction|documentary/i, "Essai"]
 ];
 
